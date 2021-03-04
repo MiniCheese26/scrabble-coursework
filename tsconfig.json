@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ESNext",
+    "rootDirs": [
+      "node_modules/@types",
+      "src/types",
+      "sharedTypes"
+    ],
+    "rootDir": "src",
+    "outDir": "build",
+    "baseUrl": "./",
+    "paths": {
+      "@/SharedTypes/*": ["sharedTypes"]
+    },
+    "moduleResolution": "Node",
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "src/**/*",
+    "sharedTypes/*"
+  ]
+}
