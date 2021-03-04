@@ -1,68 +1,15 @@
-import {
-  Letter,
-  LetterA,
-  LetterB, LetterBlank,
-  LetterC,
-  LetterD,
-  LetterE,
-  LetterF,
-  LetterG,
-  LetterH,
-  LetterI,
-  LetterJ,
-  LetterK,
-  LetterL,
-  LetterM,
-  LetterN,
-  LetterO,
-  LetterP,
-  LetterQ,
-  LetterR,
-  LetterS,
-  LetterT,
-  LetterU,
-  LetterV,
-  LetterW, LetterX, LetterY, LetterZ
-} from "./gameLetters";
+import {GameLetters, Letter} from "./gameLetters";
 import {Letter as SharedLetter} from "../../sharedTypes/sharedTypes";
 
 export class LetterBag {
   private readonly _letters: Letter[];
 
   constructor() {
-    this._letters = [
-      new LetterA(),
-      new LetterB(),
-      new LetterC(),
-      new LetterD(),
-      new LetterE(),
-      new LetterF(),
-      new LetterG(),
-      new LetterH(),
-      new LetterI(),
-      new LetterJ(),
-      new LetterK(),
-      new LetterL(),
-      new LetterM(),
-      new LetterN(),
-      new LetterO(),
-      new LetterP(),
-      new LetterQ(),
-      new LetterR(),
-      new LetterS(),
-      new LetterT(),
-      new LetterU(),
-      new LetterV(),
-      new LetterW(),
-      new LetterX(),
-      new LetterY(),
-      new LetterZ(),
-      new LetterBlank(),
-    ];
+    this._letters = GameLetters;
   }
 
   private _getTotal() {
-    return this._letters.map(x => x.count).reduce((a, b) => a + b, 0);
+    return this._letters.reduce((a, b) => a + b.count, 0);
   }
 
   getRandomLetter(): SharedLetter | null {
@@ -111,9 +58,9 @@ export class LetterBag {
   }
 
   addLetter(letter: string) {
-    const d = this._letters.find(x => x.letter === letter);
-    const l = this._letters.indexOf(d);
+    const letterToAdd = this._letters.find(x => x.letter === letter);
+    const indexOfLetterToAdd = this._letters.indexOf(letterToAdd);
 
-    this._letters[l].count++;
+    this._letters[indexOfLetterToAdd].count++;
   }
 }

@@ -237,3 +237,4 @@ fabric.properties
 plainBuild
 build
 .idea
+/client/webpack.prod.config.js

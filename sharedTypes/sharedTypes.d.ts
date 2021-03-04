@@ -1,14 +1,9 @@
 export type GameStatePlayerType = 'Human' | 'Ai' | 'Ignore' | 'Empty';
-export type GameStateGridIndexType = 'Empty' | 'Filled';
 
 export interface LocalPlayer {
     name: string;
     type: GameStatePlayerType;
     id: string;
-}
-
-export interface CreateOfflinePlayersResponse {
-    roomId: string;
 }
 
 export interface Letter {

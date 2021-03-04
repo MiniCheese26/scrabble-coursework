@@ -33,19 +33,19 @@ export class PlayerLetters {
   getTotal() {
     return this._letters.length === 0
       ? 0
-      : this._letters.map(x => x.count).reduce((a, b) => a + b);
+      : this._letters.reduce((a, b) => a + b.count, 0);
   }
 
   addLetter(letter: SharedLetter) {
     if (this.getTotal() === 7) {
-      return false;
+      return;
     }
 
     const existingLetter = this._letters.find(x => x === letter);
 
     if (existingLetter) {
       existingLetter.count++;
-      return true;
+      return;
     }
 
     this._letters.push({
@@ -64,11 +64,7 @@ export class PlayerLetters {
   }
 
   hasLetter(letter: string, value: number) {
-    return this._letters.filter(x => x.letter === letter && x.value === value).length > 0;
-  }
-
-  hasLetterInstance(letter: SharedLetter) {
-    return this._letters.filter(x => x === letter).length > 0;
+    return this._letters.some(x => x.letter === letter && x.value === value);
   }
 
   removeLetter(letter: SharedLetter) {

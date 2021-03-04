@@ -370,3 +370,33 @@ export class LetterBlank extends Letter {
         this._count = 2;
     }
 }
+
+export const GameLetters = [
+    new LetterA(),
+    new LetterB(),
+    new LetterC(),
+    new LetterD(),
+    new LetterE(),
+    new LetterF(),
+    new LetterG(),
+    new LetterH(),
+    new LetterI(),
+    new LetterJ(),
+    new LetterK(),
+    new LetterL(),
+    new LetterM(),
+    new LetterN(),
+    new LetterO(),
+    new LetterP(),
+    new LetterQ(),
+    new LetterR(),
+    new LetterS(),
+    new LetterT(),
+    new LetterU(),
+    new LetterV(),
+    new LetterW(),
+    new LetterX(),
+    new LetterY(),
+    new LetterZ(),
+    new LetterBlank(),
+];

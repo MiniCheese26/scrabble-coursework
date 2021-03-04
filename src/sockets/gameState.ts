@@ -45,16 +45,16 @@ export class GameState {
       const initialCoordinate = gridHelpers.indexToXY(i);
       const mirroredCoordinates = gridHelpers.mirrorCoordinates(initialCoordinate.x, initialCoordinate.y);
 
-      const gridIndex = {
+      const gridElement: GameGridElement = {
         gridItem: SPECIAL_COORDINATES[mirroredCoordinates[0].y][mirroredCoordinates[0].x] ?? EmptyTile,
         index: i,
       };
 
-      gameState._activeGrid.grid[i] = gridIndex;
+      gameState._activeGrid.grid[i] = gridElement;
 
       // Needs a shallow copy otherwise they point to the same reference
       // and changes to activegrid propagate in basegrid
-      gameState._baseGrid[i] = {...gridIndex};
+      gameState._baseGrid[i] = {...gridElement};
     }
 
     // initialise players

@@ -3,7 +3,7 @@ import {GameState} from "../sockets/gameState";
 
 export type SpecialTileType = 'letter' | 'word' | 'none';
 
-export type GameGridIndexEmpty = {
+export type EmptyGameGridItem = {
   textColour: string,
   backgroundColour: string,
   topText: string,
@@ -14,17 +14,17 @@ export type GameGridIndexEmpty = {
   empty: true
 };
 
-export type GameGridIndexFilled = {
+export type FilledGameGridItem = {
   empty: false,
   playerId: string
   orderIndex: number,
   turnIndex: number
 } & SharedLetter;
 
-export type GameStateGridIndex = GameGridIndexEmpty | GameGridIndexFilled;
+export type GameStateGridItem = EmptyGameGridItem | FilledGameGridItem;
 
 export type GameGridElement = {
-  gridItem: GameStateGridIndex,
+  gridItem: GameStateGridItem,
   index: number
 };
 
@@ -51,7 +51,7 @@ export type GameStates = {
 
 export type SpecialCoordinates = {
   [y: number]: {
-    [x: number]: GameGridIndexEmpty
+    [x: number]: EmptyGameGridItem
   }
 };
 
