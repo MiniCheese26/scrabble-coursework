@@ -1,6 +1,6 @@
 ## Steps to run
 
-* Node.js version 15.10.0 was used at the time of submission.
+* Node.js version 15.11.0 was used at the time of submission.
 * Navigate to the project root directory in a command line tool.
 * Use `npm run setup` to install dependencies and compile the application.
 * Run with `npm start`, `node build/index.js` or `ts-node src/index.ts`.

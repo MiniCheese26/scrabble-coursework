@@ -238,3 +238,4 @@ plainBuild
 build
 .idea
 /client/webpack.prod.config.js
+package-lock.json
