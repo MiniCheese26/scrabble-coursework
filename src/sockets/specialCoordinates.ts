@@ -1,5 +1,5 @@
 import {ThreeWordTile, TwoLetterTile, TwoWordTile, ThreeLetterTile, StartingTile} from "./specialTiles";
-import {GameGridIndexEmpty, SpecialCoordinates} from "../types/gamestate";
+import {SpecialCoordinates} from "../types/gamestate";
 
 export const SPECIAL_COORDINATES: SpecialCoordinates = {
   0: {

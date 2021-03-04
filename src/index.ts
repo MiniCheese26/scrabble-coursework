@@ -3,7 +3,7 @@ import * as express from "express";
 import * as compression from "compression";
 import * as session from "express-session";
 import * as http from "http";
-import {Server, Socket} from 'socket.io';
+import {Server} from 'socket.io';
 
 //import redis from "redis";
 //import connect_redis from "connect-redis";
@@ -69,7 +69,6 @@ app.use(session({
 
 import indexRouter from "./routes/home/home";
 import userRouter from "./routes/user/user";
-import gameRouter from "./routes/game/game";
 import initialiseSockets from "./sockets/sockets";
 
 // Sourced from https://stackoverflow.com/questions/29511404/connect-to-socket-io-server-with-specific-path-and-namespace

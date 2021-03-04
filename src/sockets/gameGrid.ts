@@ -17,7 +17,7 @@ export class GameGrid {
     for (let y = 0; y < 15; y++) {
       for (let x = 0; x < 15; x++) {
         const index = GameStateHelpers.XYToIndex({y, x});
-        const gridIndex = this.grid[index];
+        const gridElement = this.grid[index];
 
         if (parsedGrid.rows[y] === undefined) {
           parsedGrid.rows[y] = [];
@@ -27,8 +27,8 @@ export class GameGrid {
           parsedGrid.columns[x] = [];
         }
 
-        parsedGrid.rows[y].push(gridIndex);
-        parsedGrid.columns[x].push(gridIndex);
+        parsedGrid.rows[y].push(gridElement);
+        parsedGrid.columns[x].push(gridElement);
       }
     }
 

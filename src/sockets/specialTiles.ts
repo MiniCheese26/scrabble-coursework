@@ -1,6 +1,6 @@
-import {GameGridIndexEmpty} from "../types/gamestate";
+import {EmptyGameGridItem} from "../types/gamestate";
 
-export const ThreeWordTile: GameGridIndexEmpty = {
+export const ThreeWordTile: EmptyGameGridItem = {
   backgroundColour: '#F00',
   textColour: '#FFF',
   topText: '3X',
@@ -11,7 +11,7 @@ export const ThreeWordTile: GameGridIndexEmpty = {
   empty: true,
 };
 
-export const TwoWordTile: GameGridIndexEmpty = {
+export const TwoWordTile: EmptyGameGridItem = {
   backgroundColour: '#f700ff',
   textColour: '#000',
   topText: '2X',
@@ -22,7 +22,7 @@ export const TwoWordTile: GameGridIndexEmpty = {
   empty: true,
 };
 
-export const ThreeLetterTile: GameGridIndexEmpty = {
+export const ThreeLetterTile: EmptyGameGridItem = {
   backgroundColour: '#002aff',
   textColour: '#FFF',
   topText: '3X',
@@ -33,7 +33,7 @@ export const ThreeLetterTile: GameGridIndexEmpty = {
   empty: true,
 };
 
-export const TwoLetterTile: GameGridIndexEmpty = {
+export const TwoLetterTile: EmptyGameGridItem = {
   backgroundColour: '#00a6ff',
   textColour: '#000',
   topText: '2X',
@@ -44,7 +44,7 @@ export const TwoLetterTile: GameGridIndexEmpty = {
   empty: true,
 };
 
-export const StartingTile: GameGridIndexEmpty = {
+export const StartingTile: EmptyGameGridItem = {
   backgroundColour: '#f700ff',
   textColour: '#000',
   topText: 'Start',
@@ -55,7 +55,7 @@ export const StartingTile: GameGridIndexEmpty = {
   empty: true,
 };
 
-export const EmptyTile: GameGridIndexEmpty = {
+export const EmptyTile: EmptyGameGridItem = {
   backgroundColour: '#FFF',
   textColour: '',
   topText: '',

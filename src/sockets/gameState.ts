@@ -1,5 +1,5 @@
 import {GameGrid} from "./gameGrid";
-import {GameError, GameGridElement, GameGridLayout, Lines, WordScore} from "../types/gamestate";
+import {GameGridElement, GameGridLayout, Lines, WordScore} from "../types/gamestate";
 import {Player} from "./player";
 import {LetterBag} from "./letterBag";
 import {CurrentPlayer} from "./currentPlayer";
@@ -45,16 +45,16 @@ export class GameState {
       const initialCoordinate = gridHelpers.indexToXY(i);
       const mirroredCoordinates = gridHelpers.mirrorCoordinates(initialCoordinate.x, initialCoordinate.y);
 
-      const gridIndex = {
+      const gridElement: GameGridElement = {
         gridItem: SPECIAL_COORDINATES[mirroredCoordinates[0].y][mirroredCoordinates[0].x] ?? EmptyTile,
         index: i,
       };
 
-      gameState._activeGrid.grid[i] = gridIndex;
+      gameState._activeGrid.grid[i] = gridElement;
 
       // Needs a shallow copy otherwise they point to the same reference
       // and changes to activegrid propagate in basegrid
-      gameState._baseGrid[i] = {...gridIndex};
+      gameState._baseGrid[i] = {...gridElement};
     }
 
     // initialise players
@@ -161,9 +161,9 @@ export class GameState {
 
       const preAmendWord = [];
 
-      for (let gameStateGridElement of word) {
-        if (isNotEmpty(gameStateGridElement.gridItem).turnIndex !== this._turnCount) {
-          preAmendWord.push(gameStateGridElement);
+      for (const letter of word) {
+        if (isNotEmpty(letter.gridItem).turnIndex !== this._turnCount) {
+          preAmendWord.push(letter);
         }
       }
 

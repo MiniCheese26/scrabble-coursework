@@ -1,14 +1,14 @@
-import {GameStatePlayerType, LocalPlayer} from "../../sharedTypes/sharedTypes";
+import {GamePlayerType, LocalPlayer} from "../../sharedTypes/sharedTypes";
 import {PlayerLetters} from "./playerLetters";
-import {BagLetter, GameGridIndexFilled} from "../types/gamestate";
+import {FilledGameGridItem} from "../types/gamestate";
 import {LetterBag} from "./letterBag";
 
 export class Player {
   playerId: string;
-  type: GameStatePlayerType;
+  type: GamePlayerType;
   letters: PlayerLetters;
   score: number;
-  placedTiles: GameGridIndexFilled[];
+  placedTiles: FilledGameGridItem[];
   name: string;
 
   constructor(player: LocalPlayer) {
@@ -21,15 +21,11 @@ export class Player {
   }
 
   static initialise(player: LocalPlayer, letterBag: LetterBag) {
-    const gameStatePlayer = new Player(player);
+    const newPlayer = new Player(player);
 
-    gameStatePlayer.letters.addLetters(letterBag.getRandomLetters(7));
+    newPlayer.letters.addLetters(letterBag.getRandomLetters(7));
 
-    return gameStatePlayer;
-  }
-
-  playerHasLetterInstance(letter: BagLetter) {
-    return this.letters.hasLetterInstance(letter);
+    return newPlayer;
   }
 
   playerHasLetter(letter: string, value: number) {
@@ -37,13 +33,7 @@ export class Player {
   }
 
   getJsonString() {
-    return JSON.stringify({
-      playerId: this.playerId,
-      type: this.type,
-      letters: this.letters.letters,
-      score: this.score,
-      name: this.name,
-    });
+    return JSON.stringify(this.getJsonObject());
   }
 
   getJsonObject() {

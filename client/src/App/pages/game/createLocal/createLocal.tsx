@@ -3,7 +3,7 @@ import Player from "Components/player";
 import {Break} from "Styles/utils";
 import React, {ChangeEvent, useState} from "react";
 import {CreateLocalProps} from "Types/createLocal";
-import {GameStatePlayerType, LocalPlayer} from "Types/sharedTypes";
+import {GamePlayerType, LocalPlayer} from "Types/sharedTypes";
 import {useHistory} from "react-router-dom";
 
 export default function CreateLocal(props: CreateLocalProps): JSX.Element {
@@ -32,7 +32,7 @@ export default function CreateLocal(props: CreateLocalProps): JSX.Element {
 
     const history = useHistory();
 
-    const handleSetPlayers = (newType: GameStatePlayerType, index: number) => {
+    const handleSetPlayers = (newType: GamePlayerType, index: number) => {
         const playersCopy = [...players];
 
         if (newType === "Empty") {
