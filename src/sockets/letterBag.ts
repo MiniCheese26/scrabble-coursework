@@ -5,7 +5,7 @@ export class LetterBag {
   private readonly _letters: Letter[];
 
   constructor() {
-    this._letters = GameLetters;
+    this._letters = [...GameLetters];
   }
 
   private _getTotal() {

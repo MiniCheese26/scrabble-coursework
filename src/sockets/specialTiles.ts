@@ -7,7 +7,7 @@ export const ThreeWordTile: EmptyGameGridItem = {
   bottomText: 'WS',
   type: 'word',
   multiplier: 3,
-  multiplierClaimant: '',
+  multiplierEnabled: true,
   empty: true,
 };
 
@@ -18,7 +18,7 @@ export const TwoWordTile: EmptyGameGridItem = {
   bottomText: 'WS',
   type: 'word',
   multiplier: 2,
-  multiplierClaimant: '',
+  multiplierEnabled: true,
   empty: true,
 };
 
@@ -29,7 +29,7 @@ export const ThreeLetterTile: EmptyGameGridItem = {
   bottomText: 'LS',
   type: 'letter',
   multiplier: 3,
-  multiplierClaimant: '',
+  multiplierEnabled: true,
   empty: true,
 };
 
@@ -40,7 +40,7 @@ export const TwoLetterTile: EmptyGameGridItem = {
   bottomText: 'LS',
   type: 'letter',
   multiplier: 2,
-  multiplierClaimant: '',
+  multiplierEnabled: true,
   empty: true,
 };
 
@@ -51,7 +51,7 @@ export const StartingTile: EmptyGameGridItem = {
   bottomText: '',
   type: 'word',
   multiplier: 2,
-  multiplierClaimant: '',
+  multiplierEnabled: true,
   empty: true,
 };
 
@@ -62,6 +62,6 @@ export const EmptyTile: EmptyGameGridItem = {
   bottomText: '',
   type: 'none',
   multiplier: 1,
-  multiplierClaimant: '',
+  multiplierEnabled: true,
   empty: true,
 };

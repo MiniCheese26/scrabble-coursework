@@ -4,8 +4,6 @@ import fetch from "node-fetch";
 
 const DICTIONARY_URL = 'https://dictionary-dot-sse-2020.nw.r.appspot.com/';
 
-export const wordCache: string[] = [];
-
 export class GameStateHelpers {
   static indexToXY(index: number): Coordinate {
     const y = Math.floor(index / 15);
@@ -74,10 +72,6 @@ export class GameStateHelpers {
   }
 
   static async checkWord(word: string) {
-    if (wordCache.includes(word)) {
-      return true;
-    }
-
     return (await fetch(DICTIONARY_URL + word)).ok;
   }
 }

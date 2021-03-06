@@ -10,7 +10,7 @@ export type EmptyGameGridItem = {
   bottomText: string,
   type: SpecialTileType,
   multiplier: number,
-  multiplierClaimant: string,
+  multiplierEnabled: boolean,
   empty: true
 };
 

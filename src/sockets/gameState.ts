@@ -1,5 +1,5 @@
 import {GameGrid} from "./gameGrid";
-import {GameGridElement, GameGridLayout, Lines, WordScore} from "../types/gamestate";
+import {GameGridElement, GameGridLayout} from "../types/gamestate";
 import {Player} from "./player";
 import {LetterBag} from "./letterBag";
 import {CurrentPlayer} from "./currentPlayer";
@@ -7,7 +7,7 @@ import {Letter as SharedLetter, LocalPlayer} from "../../sharedTypes/sharedTypes
 import {gridHelpers} from "./gridHelpers";
 import {EmptyTile} from "./specialTiles";
 import {nanoid} from "nanoid";
-import {GameStateHelpers, wordCache} from "./gameStateHelpers";
+import {GameStateHelpers} from "./gameStateHelpers";
 import {SPECIAL_COORDINATES} from "./specialCoordinates";
 import {State} from "./state";
 
@@ -22,7 +22,7 @@ export class GameState {
   private _currentPlayer: CurrentPlayer;
   private _inviteCode: string;
   private _letterCount: number;
-  private _turnCount: number;
+  private _turnIndex: number;
   private _lettersPlacedInTurn: number[];
   private _errors: string[];
 
@@ -32,7 +32,7 @@ export class GameState {
     this._players = [];
     this._letterBag = new LetterBag();
     this._letterCount = 0;
-    this._turnCount = 0;
+    this._turnIndex = 0;
     this._lettersPlacedInTurn = [];
     this._errors = [];
   }
@@ -52,9 +52,12 @@ export class GameState {
 
       gameState._activeGrid.grid[i] = gridElement;
 
-      // Needs a shallow copy otherwise they point to the same reference
-      // and changes to activegrid propagate in basegrid
-      gameState._baseGrid[i] = {...gridElement};
+      // Needs a copy otherwise they point to the same reference
+      // and changes to activegrid propagate in basegrid. Needs a
+      // deep copy because this same gridElement is used 4 times
+      // and any modification to one of them propagates in all 4.
+      // ty stackoverflow https://stackoverflow.com/a/38874807
+      gameState._baseGrid[i] = {...gridElement, gridItem: {...gridElement.gridItem}};
     }
 
     // initialise players
@@ -105,7 +108,11 @@ export class GameState {
       return false;
     }
 
-    if (this._turnCount === 0) {
+    if (this._turnIndex !== 0 && this._checkIfGridIndexIsIsolated(gridIndex)) {
+      return false;
+    }
+
+    if (this._turnIndex === 0) {
       const coordinates = GameStateHelpers.indexToXY(gridIndex);
 
       if (coordinates.y !== 7) {
@@ -114,6 +121,27 @@ export class GameState {
     }
 
     return targetIndex.gridItem.empty;
+  }
+
+  private _checkIfGridIndexIsIsolated(gridIndex: number) {
+    const surroundingCoordinates = GameStateHelpers.getSurroundingCoordinatesAsArray(gridIndex);
+
+    let isIsolated = true;
+
+    for (const surroundingCoordinate of surroundingCoordinates) {
+      const index = GameStateHelpers.XYToIndex(surroundingCoordinate);
+
+      if (this._activeGrid.grid.hasOwnProperty(index)) {
+        const surroundingGridElement = this._activeGrid.grid[index];
+
+        if (!surroundingGridElement.gridItem.empty) {
+          isIsolated = false;
+          break;
+        }
+      }
+    }
+
+    return isIsolated;
   }
 
   placeLetter(gridIndex: number, playerId: string, value: SharedLetter): GameState {
@@ -127,11 +155,12 @@ export class GameState {
       value: value.value,
       playerId: playerId,
       orderIndex: this._letterCount,
-      turnIndex: this._turnCount
+      turnIndex: this._turnIndex
     };
 
     this._getCurrentPlayer().letters.removeLetter(value);
     this._lettersPlacedInTurn.push(gridIndex);
+    this._lettersPlacedInTurn.sort();
     this._letterCount++;
     return this;
   }
@@ -155,140 +184,76 @@ export class GameState {
     return this;
   }
 
-  private async _checkIfWordWasAmended(word: GameGridElement[]) {
-    if (!word.every(x => isNotEmpty(x.gridItem).turnIndex === isNotEmpty(word[0].gridItem).turnIndex)
-      && word.some(x => this._lettersPlacedInTurn.includes(x.index))) {
-
-      const preAmendWord = [];
-
-      for (const letter of word) {
-        if (isNotEmpty(letter.gridItem).turnIndex !== this._turnCount) {
-          preAmendWord.push(letter);
-        }
-      }
-
-      return await GameStateHelpers.checkWord(preAmendWord.map(x => isNotEmpty(x.gridItem).letter).join(""));
-    }
-
-    return false;
-  }
-
-  private async _calculateWordScore(word: GameGridElement[], playerId: string) {
+  private _calculateWordScore(word: GameGridElement[]) {
     let wordScore = 0;
-
-    const wordWasAmended = await this._checkIfWordWasAmended(word);
 
     for (const letter of word) {
       const specialTile = isEmpty(this._baseGrid[letter.index].gridItem);
 
-      if (specialTile.type === 'letter' && (specialTile.multiplierClaimant === playerId || specialTile.multiplierClaimant === '')) {
-        if (wordWasAmended) {
-          specialTile.multiplier = 1;
-        }
-
+      if (specialTile.type === 'letter' && specialTile.multiplierEnabled) {
         wordScore += (isNotEmpty(letter.gridItem).value * specialTile.multiplier);
-        specialTile.multiplierClaimant = playerId;
+        specialTile.multiplierEnabled = false;
       } else {
         wordScore += isNotEmpty(letter.gridItem).value;
       }
     }
-
     for (const letter of word) {
       const specialTile = isEmpty(this._baseGrid[letter.index].gridItem);
 
-      if (specialTile.type === 'word' && specialTile.multiplierClaimant === playerId || specialTile.multiplierClaimant === '') {
-        if (wordWasAmended) {
-          specialTile.multiplier = 1;
-        }
-
+      if (specialTile.type === 'word' && specialTile.multiplierEnabled) {
         wordScore *= specialTile.multiplier;
-        specialTile.multiplierClaimant = playerId;
+        specialTile.multiplierEnabled = false;
       }
     }
 
     return wordScore;
   }
 
-  private async _processLineWords(lineWords: GameGridElement[][]) {
-    const wordScores: WordScore[] = [];
+  private async _processWord(word: GameGridElement[]) {
+    const wordJoined = word.map(x => isNotEmpty(x.gridItem).letter).join("");
+    const isValidWord = await GameStateHelpers.checkWord(wordJoined);
 
-    for (const word of lineWords) {
-      if (word.length > 1) {
-        const wordJoined = word.map(x => isNotEmpty(x.gridItem).letter).join("");
-        const checkResult = await GameStateHelpers.checkWord(wordJoined);
-
-        if (!checkResult) {
-          this._errors.push(`${wordJoined.toLowerCase()} is not a valid word`);
-          continue;
-        }
-
-        if (!wordCache.includes(wordJoined)) {
-          wordCache.push(wordJoined);
-        }
-
-        const lastLetterPlaced = word.find(x => isNotEmpty(x.gridItem).orderIndex === Math.max(...word.map(y => isNotEmpty(y.gridItem).orderIndex)));
-        const wordOwner = isNotEmpty(lastLetterPlaced.gridItem).playerId;
-        const player = this._getPlayer(wordOwner);
-
-        const wordScore = await this._calculateWordScore(word, player.playerId);
-
-        wordScores.push({
-          score: wordScore,
-          playerId: player.playerId
-        });
-      } else if (word.length === 1) {
-        const gridElement = word[0];
-        const surroundingCoordinates = GameStateHelpers.getSurroundingCoordinatesAsArray(gridElement.index);
-
-        let isIsolated = true;
-
-        for (const surroundingCoordinate of surroundingCoordinates) {
-          const index = GameStateHelpers.XYToIndex(surroundingCoordinate);
-
-          if (this._activeGrid.grid.hasOwnProperty(index)) {
-            const surroundingGridElement = this._activeGrid.grid[index];
-
-            if (!surroundingGridElement.gridItem.empty) {
-              isIsolated = false;
-              break;
-            }
-          }
-        }
-
-        if (isIsolated) {
-          this._errors.push(`Invalid placement of ${isNotEmpty(gridElement.gridItem).letter}`);
-        }
-      }
+    if (!isValidWord) {
+      this._errors.push(`${wordJoined.toLowerCase()} is not a valid word`);
+      return -1;
     }
 
-    return wordScores;
+    return this._calculateWordScore(word);
   }
 
-  private async _processLines(lines: Lines) {
-    let wordScores: WordScore[] = [];
+  private async _processLineWords(line: GameGridElement[], targetGridElement: GameGridElement, wordsProcessed: number[]) {
+    const lineWords = GameStateHelpers.getLineWords(line);
 
-    for (const key in lines) {
-      // noinspection JSUnfilteredForInLoop
-      const line = lines[key];
+    const targetWord = lineWords.find(x => x.includes(targetGridElement));
 
-      const lineWords = GameStateHelpers.getLineWords(line);
+    const targetWordId = targetWord.reduce((a, b) => a + (b.index + isNotEmpty(b.gridItem).value), 0);
 
-      if (lineWords.length > 0) {
-        const scores = await this._processLineWords(lineWords);
-        wordScores = [...wordScores, ...scores];
+    if (targetWord.length > 1 && !wordsProcessed.includes(targetWordId)) {
+      const wordScore = await this._processWord(targetWord);
+
+      if (wordScore !== -1) {
+        this._players[this._currentPlayer.index].score += wordScore;
       }
-    }
 
-    return wordScores;
+      wordsProcessed.push(targetWordId);
+    }
   }
 
-  private async _processGrid() {
+  private async _processPlacedLetters() {
     const gridParsed = this._activeGrid.parseGrid();
 
-    const columnWordScores = await this._processLines(gridParsed.columns);
-    const rowWordScores = await this._processLines(gridParsed.rows);
+    const wordsProcessed = [];
 
-    return [...columnWordScores, ...rowWordScores];
+    for (const gridIndex of this._lettersPlacedInTurn) {
+      const gridElement = this._activeGrid.grid[gridIndex];
+      const {x,y} = GameStateHelpers.indexToXY(gridIndex);
+
+      const row = gridParsed.rows[y];
+      const column = gridParsed.columns[x];
+
+      await this._processLineWords(row, gridElement, wordsProcessed);
+      await this._processLineWords(column, gridElement, wordsProcessed);
+    }
   }
 
   private _resetTurn() {
@@ -301,7 +266,7 @@ export class GameState {
   async processTurn(): Promise<string[]> {
     this._errors = [];
 
-    if (this._turnCount === 0) {
+    if (this._turnIndex === 0) {
       if (this._lettersPlacedInTurn.some(x => x === 112) === false && this._lettersPlacedInTurn.length > 0) {
         this._errors.push("Invalid Placement");
         this._resetTurn();
@@ -309,24 +274,17 @@ export class GameState {
       }
     }
 
-    const wordScores = await this._processGrid();
+    await this._processPlacedLetters();
 
     if (this._errors.length > 0) {
       this._resetTurn();
       return this._errors;
     }
 
-    this._players.forEach(x => x.score = 0);
-
-    for (const wordScore of wordScores) {
-      const targetPlayer = this._players.find(x => x.playerId === wordScore.playerId);
-      targetPlayer.score += wordScore.score;
-    }
-
     this._lettersPlacedInTurn = [];
     this._givePlayerLetters(this._getCurrentPlayer().playerId);
     this._currentPlayer.nextPlayer();
-    this._turnCount++;
+    this._turnIndex++;
 
     return this._errors;
   }
