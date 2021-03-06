@@ -8,10 +8,6 @@ export class LetterBag {
     this._letters = [...GameLetters];
   }
 
-  private _getTotal() {
-    return this._letters.reduce((a, b) => a + b.count, 0);
-  }
-
   getRandomLetter(): SharedLetter | null {
     const availableLetters = this._letters.filter(x => x.count > 0);
 
@@ -21,13 +17,13 @@ export class LetterBag {
 
     const allLetters: Letter[] = [];
 
-    for (const letter of this._letters) {
+    for (const letter of availableLetters) {
       for (let i = 0; i < letter.count; i++) {
         allLetters.push(letter);
       }
     }
 
-    let randomIndex = Math.floor(Math.random() * this._getTotal() - 1);
+    let randomIndex = Math.floor(Math.random() * allLetters.length - 1);
 
     // random index would sometimes be -1
     if (randomIndex < 0) {

@@ -305,7 +305,7 @@ export class GameState {
     const totalLetters = player.letters.getTotal();
 
     if (totalLetters === 7) {
-      return this;
+      return;
     }
 
     const lettersNeeded = 7 - totalLetters;
