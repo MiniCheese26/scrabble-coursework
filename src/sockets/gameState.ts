@@ -126,8 +126,6 @@ export class GameState {
   private _checkIfGridIndexIsIsolated(gridIndex: number) {
     const surroundingCoordinates = GameStateHelpers.getSurroundingCoordinatesAsArray(gridIndex);
 
-    let isIsolated = true;
-
     for (const surroundingCoordinate of surroundingCoordinates) {
       const index = GameStateHelpers.XYToIndex(surroundingCoordinate);
 
@@ -135,13 +133,12 @@ export class GameState {
         const surroundingGridElement = this._activeGrid.grid[index];
 
         if (!surroundingGridElement.gridItem.empty) {
-          isIsolated = false;
-          break;
+          return false;
         }
       }
     }
 
-    return isIsolated;
+    return true;
   }
 
   placeLetter(gridIndex: number, playerId: string, value: SharedLetter): GameState {
