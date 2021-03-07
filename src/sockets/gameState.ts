@@ -1,9 +1,9 @@
 import {GameGrid} from "./gameGrid";
-import {GameGridElement, GameGridLayout} from "../types/gamestate";
+import {GameGridLayout} from "../types/gamestate";
 import {Player} from "./player";
 import {LetterBag} from "./letterBag";
 import {CurrentPlayer} from "./currentPlayer";
-import {Letter as SharedLetter, LocalPlayer} from "../../sharedTypes/sharedTypes";
+import {GameGridElement, Letter, LocalPlayer} from "../../sharedTypes/sharedTypes";
 import {gridHelpers} from "./gridHelpers";
 import {EmptyTile} from "./specialTiles";
 import {nanoid} from "nanoid";
@@ -87,7 +87,7 @@ export class GameState {
     return this._players[this._currentPlayer.index];
   }
 
-  private _validateLetter(gridIndex: number, playerId: string, value: SharedLetter) {
+  private _validateLetter(gridIndex: number, playerId: string, value: Letter) {
     if (playerId !== this._getCurrentPlayer().playerId) {
       return false;
     }
@@ -104,11 +104,11 @@ export class GameState {
       return false;
     }
 
-    if (!targetPlayer.playerHasLetter(value.letter, value.value)) {
+    if (!targetPlayer.letters.hasLetter(value.letter, value.value)) {
       return false;
     }
 
-    if (this._turnIndex !== 0 && this._checkIfGridIndexIsIsolated(gridIndex)) {
+    if (this._letterCount !== 0 && this._checkIfGridIndexIsIsolated(gridIndex)) {
       return false;
     }
 
@@ -141,7 +141,7 @@ export class GameState {
     return true;
   }
 
-  placeLetter(gridIndex: number, playerId: string, value: SharedLetter): GameState {
+  placeLetter(gridIndex: number, playerId: string, value: Letter): GameState {
     if (!this._validateLetter(gridIndex, playerId, value)) {
       return this;
     }
@@ -176,6 +176,7 @@ export class GameState {
       this._activeGrid.grid[gridIndex].gridItem = this._baseGrid[gridIndex].gridItem;
 
       this._lettersPlacedInTurn = this._lettersPlacedInTurn.filter(x => x !== gridIndex);
+      this._letterCount--;
     }
 
     return this;
@@ -286,7 +287,7 @@ export class GameState {
     return this._errors;
   }
 
-  removePlayerLetters(playerId: string, ...letters: SharedLetter[]) {
+  removePlayerLetters(playerId: string, ...letters: Letter[]) {
     for (const letter of letters) {
       const player = this._players.find(x => x.playerId === playerId);
 

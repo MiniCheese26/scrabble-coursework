@@ -1,5 +1,5 @@
-import {SocketOperations} from "Types/index";
+import {InitOperations} from "Types/index";
 
 export type UiNavigationProps = {
-    socketOperations: SocketOperations
+    initOperations: InitOperations
 };

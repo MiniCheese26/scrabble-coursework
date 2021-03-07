@@ -1,32 +1,5 @@
-import {Letter as SharedLetter} from "../../sharedTypes/sharedTypes";
+import {EmptyGameGridItem, Letter, GameGridElement} from "../../sharedTypes/sharedTypes";
 import {GameState} from "../sockets/gameState";
-
-export type SpecialTileType = 'letter' | 'word' | 'none';
-
-export type EmptyGameGridItem = {
-  textColour: string,
-  backgroundColour: string,
-  topText: string,
-  bottomText: string,
-  type: SpecialTileType,
-  multiplier: number,
-  multiplierEnabled: boolean,
-  empty: true
-};
-
-export type FilledGameGridItem = {
-  empty: false,
-  playerId: string
-  orderIndex: number,
-  turnIndex: number
-} & SharedLetter;
-
-export type GameGridItem = EmptyGameGridItem | FilledGameGridItem;
-
-export type GameGridElement = {
-  gridItem: GameGridItem,
-  index: number
-};
 
 export type GameGridLayout = {
   [x: number]: GameGridElement
@@ -34,7 +7,7 @@ export type GameGridLayout = {
 
 export type BagLetter = {
   count: number
-} & SharedLetter;
+} & Letter;
 
 export type ParsedGameGrid = {
   columns: Lines,
@@ -53,9 +26,4 @@ export type SpecialCoordinates = {
   [y: number]: {
     [x: number]: EmptyGameGridItem
   }
-};
-
-export type WordScore = {
-  playerId: string,
-  score: number
 };

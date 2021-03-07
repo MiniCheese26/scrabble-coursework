@@ -58,7 +58,7 @@ export default function UiNavigation(props: UiNavigationProps): JSX.Element {
                                 <Route exact path="/create" component={Create}/>
                                 <Route exact path="/join" component={Join}/>
                                 <Route exact path="/createLocal">
-                                    <CreateLocal createLocalGame={props.socketOperations.initOperations.createLocalGame}/>
+                                    <CreateLocal createLocalGame={props.initOperations.createLocalGame}/>
                                 </Route>
                                 <Route exact path="/game" component={Game}/>
                             </Switch>

@@ -1,4 +1,4 @@
-import {Letter as SharedLetter} from "../../sharedTypes/sharedTypes";
+import {Letter} from "../../sharedTypes/sharedTypes";
 import {BagLetter} from "../types/gamestate";
 
 export class PlayerLetters {
@@ -31,12 +31,10 @@ export class PlayerLetters {
   }
 
   getTotal() {
-    return this._letters.length === 0
-      ? 0
-      : this._letters.reduce((a, b) => a + b.count, 0);
+    return this._letters.reduce((a, b) => a + b.count, 0);
   }
 
-  addLetter(letter: SharedLetter) {
+  addLetter(letter: Letter) {
     if (this.getTotal() === 7) {
       return;
     }
@@ -57,7 +55,7 @@ export class PlayerLetters {
     this._sortLetters();
   }
 
-  addLetters(letters: SharedLetter[]) {
+  addLetters(letters: Letter[]) {
     for (const letter of letters) {
       this.addLetter(letter);
     }
@@ -67,7 +65,7 @@ export class PlayerLetters {
     return this._letters.some(x => x.letter === letter && x.value === value);
   }
 
-  removeLetter(letter: SharedLetter) {
+  removeLetter(letter: Letter) {
     const targetLetter = this._letters.find(x => x.letter === letter.letter);
 
     if (targetLetter) {

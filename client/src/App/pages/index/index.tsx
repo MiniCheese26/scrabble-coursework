@@ -1,27 +1,31 @@
 import React, {MutableRefObject, useRef, useState} from 'react';
-import {Route, Switch, useLocation} from "react-router-dom";
 import Game from "Pages/game/game";
-import {MainSection, Container, RightSection} from "Styles/index/styles";
-import {LeftSection, ProfileDetails, ProfileHeader, ProfileName, ProfilePicture} from "Styles/index/profiles/styles";
-import UiNavigation from "Components/uiNavigation";
+import {Container} from "Styles/index/styles";
 import Letters from "Components/letters";
-import Empty from "Components/empty";
 import {io, Socket} from "socket.io-client"
-import {ExchangeLettersArgs, Letter, LocalPlayer, PlaceLetterArgs, RemoveBoardLetterArgs} from "Types/sharedTypes";
-import {CurrentGame, IndexStates, SocketOperations} from "Types/index";
+import {
+  ExchangeLettersArgs, GameGridElement,
+  Letter,
+  LocalPlayer,
+  PlaceLetterArgs,
+  RemoveBoardLetterArgs,
+  SharedPlayer
+} from "Types/sharedTypes";
+import {GameData, IndexStates, SocketOperations} from "Types/index";
 import GameLoading from "Components/gameLoading";
 import CurrentPlayer from "Components/currentPlayer";
-import EndTurn from "Components/endTurn";
 import Score from "Components/score";
+import LeftSection from "Components/leftSection";
+import MainSection from "Components/mainSection";
+import RightSection from "Components/rightSection";
 
 export default function Index(): JSX.Element {
   console.log("------------------------");
-  const location = useLocation();
 
   const [shouldInitSocket, setShouldInitSocket] = useState(true);
-  const [grid, setGrid] = useState<any>({});
+  const [grid, setGrid] = useState<GameGridElement[]>([]);
   const [loadingState, setLoadingState] = useState<IndexStates>("notLoading");
-  const [activeErrors, setActiveErrors] = useState<any[]>([]);
+  const [activeErrors, setActiveErrors] = useState<string[]>([]);
 
   // Used because updating the refs below will not cause the component to re-render.
   // Plus, updating the states of the JSX components (game, letters, currentPlayerComponent etc.)
@@ -31,20 +35,30 @@ export default function Index(): JSX.Element {
 
   // These have to be created by useRef because they're referenced in callback closures
   // and because of how react hooks work references to a state will become stale
-  const players: MutableRefObject<any[]> = useRef([]);
-  const currentGame: MutableRefObject<CurrentGame> = useRef({
-    active: false,
-    type: "",
-    id: {
-      gameId: "",
-      socketId: ""
+  const currentGameData: MutableRefObject<GameData> = useRef({
+    CurrentGame: {
+      active: false,
+      type: "",
+      id: {
+        gameId: "",
+        socketId: ""
+      }
     },
-    currentPlayer: ""
+    Players: []
   });
+
   const socket: MutableRefObject<Socket> = useRef(
     io({
       autoConnect: false
     }));
+
+  const updateAllPlayers = (parsedData: SharedPlayer) => {
+    const targetPlayerIndex = currentGameData.current.Players.findIndex(x => x.playerId === parsedData.playerId);
+
+    if (targetPlayerIndex !== -1) {
+      currentGameData.current.Players[targetPlayerIndex] = parsedData;
+    }
+  }
 
   if (shouldInitSocket) {
     socket.current.open();
@@ -61,66 +75,56 @@ export default function Index(): JSX.Element {
       console.debug(args);
     });
 
-    socket.current.on("localGameCreated", (grid: string, gameId: string, playerData: string, currentPlayer: string) => {
-      const gridParsed = JSON.parse(grid);
-      const playersParsed = JSON.parse(playerData);
+    socket.current.on("localGameCreated", (grid: string, gameId: string, playerData: string) => {
+      const gridParsed: GameGridElement[] = JSON.parse(grid);
+      const playersParsed: SharedPlayer[] = JSON.parse(playerData);
       setGrid(gridParsed);
 
-      currentGame.current = {
+      currentGameData.current.CurrentGame = {
         active: true,
-        currentPlayer,
         id: {gameId, socketId: playersParsed[0].playerId},
         type: "local"
       };
 
-      players.current = playersParsed;
+      currentGameData.current.Players = playersParsed;
       setLoadingState("notLoading");
       setUpdateComponentData(true);
     });
 
     socket.current.on("gridStateUpdated", (grid: string) => {
-      const gridParsed = JSON.parse(grid);
+      const gridParsed: GameGridElement[] = JSON.parse(grid);
       setGrid(gridParsed);
       setUpdateComponentData(true);
     });
 
-    socket.current.on("updatePlayer", (data: any) => {
-      const parsedData = JSON.parse(data);
+    socket.current.on("updatePlayer", (data: string) => {
+      const parsedData: SharedPlayer | SharedPlayer[] = JSON.parse(data);
 
-      if (currentGame.current.type === "local") {
-        const latestPlayersClone = [...players.current];
-        const y = latestPlayersClone.find(x => x.playerId === parsedData.playerId);
-        const w = latestPlayersClone.indexOf(y);
-        latestPlayersClone[w] = parsedData;
-        players.current = latestPlayersClone;
-      } else if (currentGame.current.type === "online") {
-        players.current = parsedData;
+      if (Array.isArray(parsedData)) {
+        currentGameData.current.Players = parsedData;
+      } else {
+        updateAllPlayers(parsedData);
       }
 
       setUpdateComponentData(true);
     });
 
-    socket.current.on("updatePlayers", (data: any) => {
-      const parsedData = JSON.parse(data);
+    socket.current.on("updatePlayers", (data: string) => {
+      const parsedData: SharedPlayer[] = JSON.parse(data);
 
       console.log(parsedData);
 
-      for (const d of parsedData) {
-        const latestPlayersClone = [...players.current];
-        const y = latestPlayersClone.find(x => x.playerId === d.playerId);
-        const w = latestPlayersClone.indexOf(y);
-        latestPlayersClone[w] = d;
-        players.current = latestPlayersClone;
+      for (const player of parsedData) {
+        updateAllPlayers(player);
       }
 
       setUpdateComponentData(true);
     });
 
     socket.current.on("endTurn", (currentPlayer: string, errors: string) => {
-      currentGame.current.id.socketId = currentPlayer;
-      currentGame.current.currentPlayer = currentPlayer;
+      currentGameData.current.CurrentGame.id.socketId = currentPlayer;
 
-      const errorsParsed = JSON.parse(errors);
+      const errorsParsed: string[] = JSON.parse(errors);
       setActiveErrors(errorsParsed);
 
       setUpdateComponentData(true);
@@ -134,19 +138,19 @@ export default function Index(): JSX.Element {
   };
 
   const placeLetter = (args: PlaceLetterArgs) => {
-    socket.current.emit("placeLetter", currentGame.current.id, args);
+    socket.current.emit("placeLetter", currentGameData.current.CurrentGame.id, args);
   };
 
   const removeBoardLetter = (args: RemoveBoardLetterArgs) => {
-    socket.current.emit("removeBoardLetter", currentGame.current.id, args);
+    socket.current.emit("removeBoardLetter", currentGameData.current.CurrentGame.id, args);
   };
 
   const removePlayerLetters = (letters: Letter[]) => {
-    socket.current.emit("removePlayerLetters", currentGame.current.id, letters);
+    socket.current.emit("removePlayerLetters", currentGameData.current.CurrentGame.id, letters);
   };
 
   const endTurn = () => {
-    socket.current.emit("endTurn", currentGame.current.id, currentGame.current.type);
+    socket.current.emit("endTurn", currentGameData.current.CurrentGame.id, currentGameData.current.CurrentGame.type);
   };
 
   const exchangeLetters = (args: ExchangeLettersArgs) => {
@@ -168,21 +172,25 @@ export default function Index(): JSX.Element {
 
   const [game, setGame] = useState(<GameLoading/>);
   const [letters, setLetters] = useState(<Letters letters={[]} gameOperations={socketOperations.gameOperations}/>);
-  const [currentPlayerComponent, setCurrentPlayerComponent] = useState<JSX.Element | null>(null);
+  const [currentPlayerComponent, setCurrentPlayerComponent] = useState<JSX.Element>(<CurrentPlayer
+    currentPlayer={""}/>);
   const [score, setScore] = useState(<Score score={0}/>);
 
   if (updateComponentData) {
-    if (loadingState !== "creatingLocalGame" && grid && Object.keys(grid).length > 0 && currentGame.current) {
-      setGame(<Game grid={grid} players={players.current} currentGame={currentGame.current}
+    if (loadingState !== "creatingLocalGame" && grid && Object.keys(grid).length > 0 && currentGameData.current.CurrentGame) {
+      setGame(<Game grid={grid} players={currentGameData.current.Players}
+                    currentGame={currentGameData.current.CurrentGame}
                     socketOperations={socketOperations.gameOperations}/>);
     }
 
-    if (loadingState !== "creatingLocalGame" && players && players.current.length !== 0 && currentGame.current) {
-      const currentPlayer = players.current.find(x => x.playerId === currentGame.current.currentPlayer);
+    if (loadingState !== "creatingLocalGame" && currentGameData.current.Players && currentGameData.current.Players.length !== 0 && currentGameData.current.CurrentGame) {
+      const currentPlayer = currentGameData.current.Players.find(x => x.playerId === currentGameData.current.CurrentGame.id.socketId);
 
-      setScore(<Score score={currentPlayer.score}/>);
-      setCurrentPlayerComponent(<CurrentPlayer currentPlayer={currentPlayer.name}/>);
-      setLetters(<Letters letters={currentPlayer.letters} gameOperations={socketOperations.gameOperations}/>);
+      if (currentPlayer) {
+        setScore(<Score score={currentPlayer.score}/>);
+        setCurrentPlayerComponent(<CurrentPlayer currentPlayer={currentPlayer.name}/>);
+        setLetters(<Letters letters={currentPlayer.letters} gameOperations={socketOperations.gameOperations}/>);
+      }
     }
 
     setUpdateComponentData(false);
@@ -190,36 +198,10 @@ export default function Index(): JSX.Element {
 
   return (
     <Container>
-      <LeftSection>
-        <ProfileHeader>
-          <ProfilePicture/>
-          <ProfileName>Guest</ProfileName>
-        </ProfileHeader>
-        <ProfileDetails>
-        </ProfileDetails>
-      </LeftSection>
-      <MainSection>
-        <Switch location={location}>
-          <Route exact path="/game">
-            {game}
-          </Route>
-          <Route>
-            <UiNavigation socketOperations={socketOperations}/>
-          </Route>
-        </Switch>
-      </MainSection>
-      <RightSection>
-        <Switch location={location}>
-          <Route exact path="/game">
-            {currentPlayerComponent}
-            {letters}
-            <p>score: {score}</p>
-            {activeErrors.map(x => <p>{x}</p>)}
-            <EndTurn gameOperations={socketOperations.gameOperations}/>
-          </Route>
-          <Route component={Empty}/>
-        </Switch>
-      </RightSection>
+      <LeftSection/>
+      <MainSection game={game} initOperations={socketOperations.initOperations}/>
+      <RightSection activeErrors={activeErrors} letters={letters} gameOperations={socketOperations.gameOperations}
+                    score={score} currentPlayer={currentPlayerComponent}/>
     </Container>
   );
 }

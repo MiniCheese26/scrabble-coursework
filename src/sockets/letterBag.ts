@@ -1,21 +1,21 @@
-import {GameLetters, Letter} from "./gameLetters";
-import {Letter as SharedLetter} from "../../sharedTypes/sharedTypes";
+import {GameLetters, GameStateLetter} from "./gameStateLetters";
+import {Letter} from "../../sharedTypes/sharedTypes";
 
 export class LetterBag {
-  private readonly _letters: Letter[];
+  private readonly _letters: GameStateLetter[];
 
   constructor() {
     this._letters = [...GameLetters];
   }
 
-  getRandomLetter(): SharedLetter | null {
+  getRandomLetter(): Letter | null {
     const availableLetters = this._letters.filter(x => x.count > 0);
 
     if (availableLetters.length === 0) {
       return null;
     }
 
-    const allLetters: Letter[] = [];
+    const allLetters: GameStateLetter[] = [];
 
     for (const letter of availableLetters) {
       for (let i = 0; i < letter.count; i++) {
@@ -39,8 +39,8 @@ export class LetterBag {
     };
   }
 
-  getRandomLetters(number: number): SharedLetter[] {
-    const letters: SharedLetter[] = [];
+  getRandomLetters(number: number): Letter[] {
+    const letters: Letter[] = [];
 
     for (let i = 0; i < number; i++) {
       const randomLetter = this.getRandomLetter();

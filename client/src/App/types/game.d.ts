@@ -1,23 +1,10 @@
-import {TileBase} from "Classes/tiles";
 import {LocalPlayer} from "Types/createLocal";
 import {CurrentGame, GameOperations} from "Types/index";
-
-export type Coordinate = {
-    x: number,
-    y: number
-};
-
-type SpecialCoordinate = {
-    [key: number]: TileBase
-};
-
-export type SpecialCoordinates = {
-    [key: number]: SpecialCoordinate
-};
+import {GameGridElement, SharedPlayer} from "Types/sharedTypes";
 
 export type GameProps = {
-    grid: any,
-    players: any[],
+    grid: GameGridElement[],
+    players: SharedPlayer[],
     currentGame: CurrentGame,
     socketOperations: GameOperations
 };

@@ -239,3 +239,5 @@ build
 .idea
 /client/webpack.prod.config.js
 package-lock.json
+/webpack.config.js
+/client/webpack.dev.config.js

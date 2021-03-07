@@ -1,5 +1,6 @@
-import {GameGridElement, ParsedGameGrid} from "../types/gamestate";
+import {ParsedGameGrid} from "../types/gamestate";
 import {GameStateHelpers} from "./gameStateHelpers";
+import {GameGridElement} from "../../sharedTypes/sharedTypes";
 
 export class GameGrid {
   grid: GameGridElement[]

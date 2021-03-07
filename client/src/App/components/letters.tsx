@@ -7,15 +7,10 @@ import {
 } from "Styles/components/letter/styles";
 import LetterItem from "Components/letterItem";
 import {useDrop} from "react-dnd";
-import {GameOperations} from "Types/index";
 import {GridDragItem} from "./gridItem";
 import {Letter} from "Types/sharedTypes";
 import {LetterTradeToggleType} from "Types/letterItem";
-
-type LettersProps = {
-  letters: any[],
-  gameOperations: GameOperations
-};
+import {LettersProps} from "Types/letters";
 
 export default function Letters(props: LettersProps): JSX.Element {
   const [selectedLetters, setSelectedLetters] = useState<Letter[]>([]);
@@ -36,7 +31,7 @@ export default function Letters(props: LettersProps): JSX.Element {
 
       // Don't include a key as that'll cause the previous state to be lost
       letters.push(
-        <LetterItem onLetterTradeToggled={onLetterTradeToggled} isTradingLetters={isTradingLetters}
+        <LetterItem key={i + Math.random()} onLetterTradeToggled={onLetterTradeToggled} isTradingLetters={isTradingLetters}
                     letter={letter.letter} value={letter.value}/>
       );
     }

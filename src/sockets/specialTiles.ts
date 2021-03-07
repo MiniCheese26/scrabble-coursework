@@ -1,4 +1,4 @@
-import {EmptyGameGridItem} from "../types/gamestate";
+import {EmptyGameGridItem} from "../../sharedTypes/sharedTypes";
 
 export const ThreeWordTile: EmptyGameGridItem = {
   backgroundColour: '#F00',

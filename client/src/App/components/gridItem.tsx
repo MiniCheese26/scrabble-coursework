@@ -39,7 +39,7 @@ export default function GridItem(props: GridItemProps): React.ReactElement {
       }
     },
     canDrop: () => {
-      return props.gridItem.empty === true;
+      return props.gridItem.empty;
     },
   });
 
@@ -47,8 +47,11 @@ export default function GridItem(props: GridItemProps): React.ReactElement {
     item: {
       type: "gridLetter",
       index: props.index,
-      letter: props.gridItem.letter,
-      value: props.gridItem.value
+      letter: props.gridItem.empty ? "" : props.gridItem.letter,
+      value: props.gridItem.empty ? 0 : props.gridItem.value
+    },
+    canDrag: _ => {
+      return !props.gridItem.empty;
     }
   });
 

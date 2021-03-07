@@ -6,7 +6,7 @@ import {Prompt} from 'react-router-dom';
 
 export default function Game(props: GameProps): React.ReactElement {
   const gridItems = props.grid.map(
-    (x: any) => <GridItem key={x.index} gridItem={x.gridItem} index={x.index} gameOperations={props.socketOperations}/>,
+    x => <GridItem key={x.index} gridItem={x.gridItem} index={x.index} gameOperations={props.socketOperations}/>,
   );
 
   return (

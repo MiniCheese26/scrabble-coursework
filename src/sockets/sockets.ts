@@ -3,7 +3,7 @@ import {
   GameSocketIdentification,
   LocalPlayer,
   PlaceLetterArgs,
-  Letter as SharedLetter,
+  Letter,
   RemoveBoardLetterArgs,
   GameType,
 } from 'SharedTypes/sharedTypes';
@@ -53,7 +53,7 @@ export default function initialiseSocket(io: Server) {
       socket.emit('updatePlayer', state.getPlayer(id.socketId).getJsonString());
     });
 
-    socket.on("removePlayerLetters", (id: GameSocketIdentification, args: SharedLetter[]) => {
+    socket.on("removePlayerLetters", (id: GameSocketIdentification, args: Letter[]) => {
       const gameState = gameStates[id.gameId];
 
       const state = gameState.removePlayerLetters(id.socketId, ...args).syncState();

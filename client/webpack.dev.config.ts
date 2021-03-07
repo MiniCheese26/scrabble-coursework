@@ -11,11 +11,13 @@ interface Configuration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;
 }
 
-const d = path.resolve(__dirname, "../sharedTypes");
-
 const config: Configuration = {
   mode: "development",
   entry: "./src/index.tsx",
+  output: {
+    path: path.join(__dirname, "build"),
+    filename: "[name].[contenthash].js"
+  },
   module: {
     rules: [
       {
@@ -60,15 +62,15 @@ const config: Configuration = {
       template: "src/index.html"
     }),
     new HotModuleReplacementPlugin(),
-    new ESLintPlugin({
+    /*new ESLintPlugin({
       extensions: ["js", "jsx", "ts", "tsx"],
       eslintPath: "./.eslintrc.json",
-    }),
+    }),*/
     new ForkTsCheckerWebpackPlugin({
       async: false
     })
   ],
-  devtool: "inline-source-map",
+  devtool: "eval-source-map",
   devServer: {
     contentBase: path.join(__dirname, "build"),
     historyApiFallback: true,

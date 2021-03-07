@@ -1,5 +1,4 @@
-import {Coordinate} from "../../sharedTypes/sharedTypes";
-import {GameGridElement, GameGridItem} from "../types/gamestate";
+import {Coordinate, GameGridElement, GameGridItem} from "../../sharedTypes/sharedTypes";
 import fetch from "node-fetch";
 
 const DICTIONARY_URL = 'https://dictionary-dot-sse-2020.nw.r.appspot.com/';

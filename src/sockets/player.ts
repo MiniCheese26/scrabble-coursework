@@ -1,6 +1,5 @@
-import {GamePlayerType, LocalPlayer} from "../../sharedTypes/sharedTypes";
+import {FilledGameGridItem, GamePlayerType, LocalPlayer, SharedPlayer} from "../../sharedTypes/sharedTypes";
 import {PlayerLetters} from "./playerLetters";
-import {FilledGameGridItem} from "../types/gamestate";
 import {LetterBag} from "./letterBag";
 
 export class Player {
@@ -28,21 +27,17 @@ export class Player {
     return newPlayer;
   }
 
-  playerHasLetter(letter: string, value: number) {
-    return this.letters.hasLetter(letter, value);
-  }
-
   getJsonString() {
     return JSON.stringify(this.getJsonObject());
   }
 
-  getJsonObject() {
+  getJsonObject(): SharedPlayer {
     return {
       playerId: this.playerId,
       type: this.type,
       letters: this.letters.letters,
       score: this.score,
       name: this.name,
-    }
+    };
   }
 }

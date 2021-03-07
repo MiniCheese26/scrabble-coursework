@@ -6,6 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack serve --config webpack.dev.config.ts",
     "build": "webpack --config webpack.prod.config.ts",
+    "buildDev": "webpack --config webpack.dev.config.ts",
     "plainBuild": "tsc -b tsconfig.plain.json"
   },
   "author": "Kaleb Medhurst",

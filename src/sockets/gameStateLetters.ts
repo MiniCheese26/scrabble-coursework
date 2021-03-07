@@ -1,4 +1,4 @@
-export abstract class Letter {
+export abstract class GameStateLetter {
     protected abstract readonly _letter: string;
     protected abstract readonly _value: number;
     protected abstract _count: number;
@@ -20,7 +20,7 @@ export abstract class Letter {
     }
 }
 
-export class LetterA extends Letter {
+export class LetterA extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -33,7 +33,7 @@ export class LetterA extends Letter {
     }
 }
 
-export class LetterB extends Letter {
+export class LetterB extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -46,7 +46,7 @@ export class LetterB extends Letter {
     }
 }
 
-export class LetterC extends Letter {
+export class LetterC extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -59,7 +59,7 @@ export class LetterC extends Letter {
     }
 }
 
-export class LetterD extends Letter {
+export class LetterD extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -72,7 +72,7 @@ export class LetterD extends Letter {
     }
 }
 
-export class LetterE extends Letter {
+export class LetterE extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -85,7 +85,7 @@ export class LetterE extends Letter {
     }
 }
 
-export class LetterF extends Letter {
+export class LetterF extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -98,7 +98,7 @@ export class LetterF extends Letter {
     }
 }
 
-export class LetterG extends Letter {
+export class LetterG extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -111,7 +111,7 @@ export class LetterG extends Letter {
     }
 }
 
-export class LetterH extends Letter {
+export class LetterH extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -124,7 +124,7 @@ export class LetterH extends Letter {
     }
 }
 
-export class LetterI extends Letter {
+export class LetterI extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -137,7 +137,7 @@ export class LetterI extends Letter {
     }
 }
 
-export class LetterJ extends Letter {
+export class LetterJ extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -150,7 +150,7 @@ export class LetterJ extends Letter {
     }
 }
 
-export class LetterK extends Letter {
+export class LetterK extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -163,7 +163,7 @@ export class LetterK extends Letter {
     }
 }
 
-export class LetterL extends Letter {
+export class LetterL extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -176,7 +176,7 @@ export class LetterL extends Letter {
     }
 }
 
-export class LetterM extends Letter {
+export class LetterM extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -189,7 +189,7 @@ export class LetterM extends Letter {
     }
 }
 
-export class LetterN extends Letter {
+export class LetterN extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -202,7 +202,7 @@ export class LetterN extends Letter {
     }
 }
 
-export class LetterO extends Letter {
+export class LetterO extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -215,7 +215,7 @@ export class LetterO extends Letter {
     }
 }
 
-export class LetterP extends Letter {
+export class LetterP extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -228,7 +228,7 @@ export class LetterP extends Letter {
     }
 }
 
-export class LetterQ extends Letter {
+export class LetterQ extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -241,7 +241,7 @@ export class LetterQ extends Letter {
     }
 }
 
-export class LetterR extends Letter {
+export class LetterR extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -254,7 +254,7 @@ export class LetterR extends Letter {
     }
 }
 
-export class LetterS extends Letter {
+export class LetterS extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -267,7 +267,7 @@ export class LetterS extends Letter {
     }
 }
 
-export class LetterT extends Letter {
+export class LetterT extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -280,7 +280,7 @@ export class LetterT extends Letter {
     }
 }
 
-export class LetterU extends Letter {
+export class LetterU extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -293,7 +293,7 @@ export class LetterU extends Letter {
     }
 }
 
-export class LetterV extends Letter {
+export class LetterV extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -306,7 +306,7 @@ export class LetterV extends Letter {
     }
 }
 
-export class LetterW extends Letter {
+export class LetterW extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -319,7 +319,7 @@ export class LetterW extends Letter {
     }
 }
 
-export class LetterX extends Letter {
+export class LetterX extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -332,7 +332,7 @@ export class LetterX extends Letter {
     }
 }
 
-export class LetterY extends Letter {
+export class LetterY extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -345,7 +345,7 @@ export class LetterY extends Letter {
     }
 }
 
-export class LetterZ extends Letter {
+export class LetterZ extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
@@ -358,7 +358,7 @@ export class LetterZ extends Letter {
     }
 }
 
-export class LetterBlank extends Letter {
+export class LetterBlank extends GameStateLetter {
     protected readonly _letter: string;
     protected readonly _value: number;
     protected _count: number;
