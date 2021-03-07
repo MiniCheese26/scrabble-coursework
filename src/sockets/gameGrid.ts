@@ -1,9 +1,9 @@
 import {ParsedGameGrid} from "../types/gamestate";
 import {GameStateHelpers} from "./gameStateHelpers";
-import {GameGridElement} from "../../sharedTypes/sharedTypes";
+import {GameGridElement, GameGridItem} from "../../sharedTypes/sharedTypes";
 
 export class GameGrid {
-  grid: GameGridElement[]
+  grid: GameGridElement<GameGridItem>[]
 
   constructor() {
     this.grid = [];

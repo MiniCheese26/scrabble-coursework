@@ -70,7 +70,7 @@ export interface FilledGameGridItem extends Letter {
 
 export type GameGridItem = EmptyGameGridItem | FilledGameGridItem;
 
-export interface GameGridElement {
-  gridItem: GameGridItem,
+export interface GameGridElement<T extends GameGridItem> {
+  gridItem: T,
   index: number
 }

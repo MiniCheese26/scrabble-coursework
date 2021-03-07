@@ -1,8 +1,8 @@
-import {EmptyGameGridItem, Letter, GameGridElement} from "../../sharedTypes/sharedTypes";
+import {EmptyGameGridItem, Letter, GameGridElement, GameGridItem} from "../../sharedTypes/sharedTypes";
 import {GameState} from "../sockets/gameState";
 
-export type GameGridLayout = {
-  [x: number]: GameGridElement
+export type GameGridLayout<T extends GameGridItem> = {
+  [x: number]: GameGridElement<T>
 };
 
 export type BagLetter = {
@@ -15,7 +15,7 @@ export type ParsedGameGrid = {
 };
 
 export type Lines = {
-  [key: number]: GameGridElement[]
+  [key: number]: GameGridElement<GameGridItem>[]
 };
 
 export type GameStates = {

@@ -1,4 +1,10 @@
-import {Coordinate, GameGridElement, GameGridItem} from "../../sharedTypes/sharedTypes";
+import {
+  Coordinate,
+  EmptyGameGridItem,
+  FilledGameGridItem,
+  GameGridElement,
+  GameGridItem
+} from "../../sharedTypes/sharedTypes";
 import fetch from "node-fetch";
 
 const DICTIONARY_URL = 'https://dictionary-dot-sse-2020.nw.r.appspot.com/';
@@ -33,24 +39,12 @@ export class GameStateHelpers {
     ];
   }
 
-  static isEmpty(gridItem: GameGridItem) {
-    if (gridItem.empty) {
-      return gridItem;
-    }
-
-    return null;
+  static castGridItem<T extends EmptyGameGridItem | FilledGameGridItem>(gridElement: GameGridElement<GameGridItem>): GameGridElement<T> {
+    return {...gridElement, gridItem: gridElement.gridItem as T};
   }
 
-  static isNotEmpty(gridItem: GameGridItem) {
-    if (gridItem.empty === false) {
-      return gridItem;
-    }
-
-    return null;
-  }
-
-  static getLineWords(line: GameGridElement[]) {
-    const words: GameGridElement[][] = [];
+  static getLineWords(line: GameGridElement<GameGridItem>[]) {
+    const words: GameGridElement<FilledGameGridItem>[][] = [];
 
     let currentWord = [];
 

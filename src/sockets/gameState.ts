@@ -3,7 +3,13 @@ import {GameGridLayout} from "../types/gamestate";
 import {Player} from "./player";
 import {LetterBag} from "./letterBag";
 import {CurrentPlayer} from "./currentPlayer";
-import {GameGridElement, Letter, LocalPlayer} from "../../sharedTypes/sharedTypes";
+import {
+  EmptyGameGridItem,
+  FilledGameGridItem,
+  GameGridElement, GameGridItem,
+  Letter,
+  LocalPlayer
+} from "../../sharedTypes/sharedTypes";
 import {gridHelpers} from "./gridHelpers";
 import {EmptyTile} from "./specialTiles";
 import {nanoid} from "nanoid";
@@ -11,12 +17,11 @@ import {GameStateHelpers} from "./gameStateHelpers";
 import {SPECIAL_COORDINATES} from "./specialCoordinates";
 import {State} from "./state";
 
-const isNotEmpty = GameStateHelpers.isNotEmpty;
-const isEmpty = GameStateHelpers.isEmpty;
+const castGridItem = GameStateHelpers.castGridItem;
 
 export class GameState {
   private readonly _activeGrid: GameGrid;
-  private readonly _baseGrid: GameGridLayout;
+  private readonly _baseGrid: GameGridLayout<EmptyGameGridItem>;
   private _players: Player[];
   private _letterBag: LetterBag;
   private _currentPlayer: CurrentPlayer;
@@ -45,7 +50,7 @@ export class GameState {
       const initialCoordinate = gridHelpers.indexToXY(i);
       const mirroredCoordinates = gridHelpers.mirrorCoordinates(initialCoordinate.x, initialCoordinate.y);
 
-      const gridElement: GameGridElement = {
+      const gridElement: GameGridElement<EmptyGameGridItem> = {
         gridItem: SPECIAL_COORDINATES[mirroredCoordinates[0].y][mirroredCoordinates[0].x] ?? EmptyTile,
         index: i,
       };
@@ -179,21 +184,21 @@ export class GameState {
     return this;
   }
 
-  private _calculateWordScore(word: GameGridElement[]) {
+  private _calculateWordScore(word: GameGridElement<FilledGameGridItem>[]) {
     let wordScore = 0;
 
     for (const letter of word) {
-      const specialTile = isEmpty(this._baseGrid[letter.index].gridItem);
+      const specialTile = this._baseGrid[letter.index].gridItem;
 
       if (specialTile.type === 'letter' && specialTile.multiplierEnabled) {
-        wordScore += (isNotEmpty(letter.gridItem).value * specialTile.multiplier);
+        wordScore += (letter.gridItem.value * specialTile.multiplier);
         specialTile.multiplierEnabled = false;
       } else {
-        wordScore += isNotEmpty(letter.gridItem).value;
+        wordScore += letter.gridItem.value;
       }
     }
     for (const letter of word) {
-      const specialTile = isEmpty(this._baseGrid[letter.index].gridItem);
+      const specialTile = this._baseGrid[letter.index].gridItem;
 
       if (specialTile.type === 'word' && specialTile.multiplierEnabled) {
         wordScore *= specialTile.multiplier;
@@ -204,8 +209,8 @@ export class GameState {
     return wordScore;
   }
 
-  private async _processWord(word: GameGridElement[]) {
-    const wordJoined = word.map(x => isNotEmpty(x.gridItem).letter).join("");
+  private async _processWord(word: GameGridElement<FilledGameGridItem>[]) {
+    const wordJoined = word.map(x => x.gridItem.letter).join("");
     const isValidWord = await GameStateHelpers.checkWord(wordJoined);
 
     if (!isValidWord) {
@@ -216,12 +221,12 @@ export class GameState {
     return this._calculateWordScore(word);
   }
 
-  private async _processLineWords(line: GameGridElement[], targetGridElement: GameGridElement, wordsProcessed: number[]) {
+  private async _processLineWords(line: GameGridElement<GameGridItem>[], targetGridElement: GameGridElement<FilledGameGridItem>, wordsProcessed: number[]) {
     const lineWords = GameStateHelpers.getLineWords(line);
 
     const targetWord = lineWords.find(x => x.includes(targetGridElement));
 
-    const targetWordId = targetWord.reduce((a, b) => a + (b.index + isNotEmpty(b.gridItem).value), 0);
+    const targetWordId = targetWord.reduce((a, b) => a + (b.index + b.gridItem.value), 0);
 
     if (targetWord.length > 1 && !wordsProcessed.includes(targetWordId)) {
       const wordScore = await this._processWord(targetWord);
@@ -240,7 +245,7 @@ export class GameState {
     const wordsProcessed = [];
 
     for (const gridIndex of this._lettersPlacedInTurn) {
-      const gridElement = this._activeGrid.grid[gridIndex];
+      const gridElement = castGridItem<FilledGameGridItem>(this._activeGrid.grid[gridIndex]);
       const {x, y} = GameStateHelpers.indexToXY(gridIndex);
 
       const row = gridParsed.rows[y];
@@ -253,8 +258,8 @@ export class GameState {
 
   private _resetTurn() {
     for (const index of this._lettersPlacedInTurn) {
-      const placedLetter = isNotEmpty(this._activeGrid.grid[index].gridItem);
-      this.removeBoardLetter(index, placedLetter.playerId);
+      const placedLetter = castGridItem<FilledGameGridItem>(this._activeGrid.grid[index]);
+      this.removeBoardLetter(index, placedLetter.gridItem.playerId);
     }
   }
 
