@@ -50,8 +50,10 @@ export class GameStateHelpers {
 
     for (const letter of line) {
       if (letter.gridItem.empty) {
-        words.push(currentWord);
-        currentWord = [];
+        if (currentWord.length > 0) {
+          words.push(currentWord);
+          currentWord = [];
+        }
       } else {
         currentWord.push(letter);
       }

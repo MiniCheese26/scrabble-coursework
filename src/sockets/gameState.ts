@@ -224,7 +224,7 @@ export class GameState {
   private async _processLineWords(line: GameGridElement<GameGridItem>[], targetGridElement: GameGridElement<FilledGameGridItem>, wordsProcessed: number[]) {
     const lineWords = GameStateHelpers.getLineWords(line);
 
-    const targetWord = lineWords.find(x => x.includes(targetGridElement));
+    const targetWord = lineWords.find(x => x.filter(x => x.index === targetGridElement.index).length > 0);
 
     const targetWordId = targetWord.reduce((a, b) => a + (b.index + b.gridItem.value), 0);
 
