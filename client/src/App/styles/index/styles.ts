@@ -20,7 +20,7 @@ export const Panel = styled.section`
 `;
 
 export const MainSection = styled(Panel)`
-  flex: 4;
+  flex: 4 1 66%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,7 +50,7 @@ export const BackOption = styled.button`
 `;
 
 export const RightSection = styled(Panel)`
-  flex: 1 2;
+  flex: 1 2 16.5%;
   display: flex;
   flex-direction: column;
   margin-right: 0.5rem;

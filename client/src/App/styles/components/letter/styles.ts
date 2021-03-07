@@ -7,7 +7,6 @@ export const LettersAreaWrapper = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
-  max-height: 200px;
   padding-bottom: 0.3rem;
   border-bottom: #162127 2px solid;
 `;

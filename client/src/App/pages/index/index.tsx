@@ -14,7 +14,7 @@ import {
 import {GameData, IndexStates, SocketOperations} from "Types/index";
 import GameLoading from "Components/gameLoading";
 import CurrentPlayer from "Components/currentPlayer";
-import Score from "Components/score";
+import Scores from "Components/scores";
 import LeftSection from "Components/leftSection";
 import MainSection from "Components/mainSection";
 import RightSection from "Components/rightSection";
@@ -52,7 +52,7 @@ export default function Index(): JSX.Element {
       autoConnect: false
     }));
 
-  const updateAllPlayers = (parsedData: SharedPlayer) => {
+  const updatePlayer = (parsedData: SharedPlayer) => {
     const targetPlayerIndex = currentGameData.current.Players.findIndex(x => x.playerId === parsedData.playerId);
 
     if (targetPlayerIndex !== -1) {
@@ -71,7 +71,7 @@ export default function Index(): JSX.Element {
       console.error("Lost connection to socket");
     });
 
-    socket.current.on("debugMessage", (args: any) => {
+    socket.current.on("debugMessage", (args: string) => {
       console.debug(args);
     });
 
@@ -98,13 +98,9 @@ export default function Index(): JSX.Element {
     });
 
     socket.current.on("updatePlayer", (data: string) => {
-      const parsedData: SharedPlayer | SharedPlayer[] = JSON.parse(data);
+      const parsedData: SharedPlayer = JSON.parse(data);
 
-      if (Array.isArray(parsedData)) {
-        currentGameData.current.Players = parsedData;
-      } else {
-        updateAllPlayers(parsedData);
-      }
+      updatePlayer(parsedData);
 
       setUpdateComponentData(true);
     });
@@ -115,7 +111,7 @@ export default function Index(): JSX.Element {
       console.log(parsedData);
 
       for (const player of parsedData) {
-        updateAllPlayers(player);
+        updatePlayer(player);
       }
 
       setUpdateComponentData(true);
@@ -174,7 +170,7 @@ export default function Index(): JSX.Element {
   const [letters, setLetters] = useState(<Letters letters={[]} gameOperations={socketOperations.gameOperations}/>);
   const [currentPlayerComponent, setCurrentPlayerComponent] = useState<JSX.Element>(<CurrentPlayer
     currentPlayer={""}/>);
-  const [score, setScore] = useState(<Score score={0}/>);
+  const [score, setScore] = useState(<Scores players={currentGameData.current.Players}/>);
 
   if (updateComponentData) {
     if (loadingState !== "creatingLocalGame" && grid && Object.keys(grid).length > 0 && currentGameData.current.CurrentGame) {
@@ -190,7 +186,7 @@ export default function Index(): JSX.Element {
 
       if (currentPlayer) {
         setScore(
-          <Score score={currentPlayer.score}/>
+          <Scores players={currentGameData.current.Players}/>
         );
 
         setCurrentPlayerComponent(
@@ -211,7 +207,7 @@ export default function Index(): JSX.Element {
       <LeftSection/>
       <MainSection game={game} initOperations={socketOperations.initOperations}/>
       <RightSection activeErrors={activeErrors} letters={letters} gameOperations={socketOperations.gameOperations}
-                    score={score} currentPlayer={currentPlayerComponent}/>
+                    scores={score} currentPlayer={currentPlayerComponent}/>
     </Container>
   );
 }

@@ -3,7 +3,7 @@ import {GameButton} from "Styles/globalStyles";
 
 export const EndTurnButton = styled.button`
   ${GameButton};
-  margin-top: auto;
+  margin-top: 0.3rem;
   flex: 1;
   width: 100%;
   max-height: 70px;

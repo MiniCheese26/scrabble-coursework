@@ -35,7 +35,7 @@ export class LetterBag {
 
     return {
       letter: randomLetter.letter,
-      value: randomLetter.value,
+      value: randomLetter.value
     };
   }
 

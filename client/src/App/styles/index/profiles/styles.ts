@@ -3,7 +3,7 @@ import image from "Resources/blank-avatar.png";
 import {Panel} from "Styles/index/styles";
 
 export const LeftSection = styled(Panel)`
-  flex: 1 2;
+  flex: 1 2 16.5%;
   margin-left: 0.5rem;
   display: flex;
   flex-direction: column;

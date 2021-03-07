@@ -29,9 +29,9 @@ export default function Letters(props: LettersProps): JSX.Element {
   for (const letter of props.letters) {
     for (let i = 0; i < letter.count; i++) {
 
-      // Don't include a key as that'll cause the previous state to be lost
+      // Work on implementing some sort of unique id for the key
       letters.push(
-        <LetterItem key={i + Math.random()} onLetterTradeToggled={onLetterTradeToggled} isTradingLetters={isTradingLetters}
+        <LetterItem onLetterTradeToggled={onLetterTradeToggled} isTradingLetters={isTradingLetters}
                     letter={letter.letter} value={letter.value}/>
       );
     }
