@@ -4,7 +4,7 @@ import {Container} from "Styles/index/styles";
 import Letters from "Components/letters";
 import {io, Socket} from "socket.io-client"
 import {
-  ExchangeLettersArgs, GameGridElement,
+  ExchangeLettersArgs, GameGridElement, GameGridItem,
   Letter,
   LocalPlayer,
   PlaceLetterArgs,
@@ -23,7 +23,7 @@ export default function Index(): JSX.Element {
   console.log("------------------------");
 
   const [shouldInitSocket, setShouldInitSocket] = useState(true);
-  const [grid, setGrid] = useState<GameGridElement[]>([]);
+  const [grid, setGrid] = useState<GameGridElement<GameGridItem>[]>([]);
   const [loadingState, setLoadingState] = useState<IndexStates>("notLoading");
   const [activeErrors, setActiveErrors] = useState<string[]>([]);
 
@@ -76,7 +76,7 @@ export default function Index(): JSX.Element {
     });
 
     socket.current.on("localGameCreated", (grid: string, gameId: string, playerData: string) => {
-      const gridParsed: GameGridElement[] = JSON.parse(grid);
+      const gridParsed: GameGridElement<GameGridItem>[] = JSON.parse(grid);
       const playersParsed: SharedPlayer[] = JSON.parse(playerData);
       setGrid(gridParsed);
 
@@ -92,7 +92,7 @@ export default function Index(): JSX.Element {
     });
 
     socket.current.on("gridStateUpdated", (grid: string) => {
-      const gridParsed: GameGridElement[] = JSON.parse(grid);
+      const gridParsed: GameGridElement<GameGridItem>[] = JSON.parse(grid);
       setGrid(gridParsed);
       setUpdateComponentData(true);
     });
