@@ -128,13 +128,10 @@ export class GameState {
 
     for (const surroundingCoordinate of surroundingCoordinates) {
       const index = GameStateHelpers.XYToIndex(surroundingCoordinate);
+      const surroundingGridElement = this._activeGrid.grid[index];
 
-      if (this._activeGrid.grid.hasOwnProperty(index)) {
-        const surroundingGridElement = this._activeGrid.grid[index];
-
-        if (!surroundingGridElement.gridItem.empty) {
-          return false;
-        }
+      if (surroundingGridElement && !surroundingGridElement.gridItem.empty) {
+        return false;
       }
     }
 
@@ -244,7 +241,7 @@ export class GameState {
 
     for (const gridIndex of this._lettersPlacedInTurn) {
       const gridElement = this._activeGrid.grid[gridIndex];
-      const {x,y} = GameStateHelpers.indexToXY(gridIndex);
+      const {x, y} = GameStateHelpers.indexToXY(gridIndex);
 
       const row = gridParsed.rows[y];
       const column = gridParsed.columns[x];

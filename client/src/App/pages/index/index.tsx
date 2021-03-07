@@ -178,18 +178,28 @@ export default function Index(): JSX.Element {
 
   if (updateComponentData) {
     if (loadingState !== "creatingLocalGame" && grid && Object.keys(grid).length > 0 && currentGameData.current.CurrentGame) {
-      setGame(<Game grid={grid} players={currentGameData.current.Players}
-                    currentGame={currentGameData.current.CurrentGame}
-                    socketOperations={socketOperations.gameOperations}/>);
+      setGame(
+        <Game grid={grid} players={currentGameData.current.Players}
+              currentGame={currentGameData.current.CurrentGame}
+              socketOperations={socketOperations.gameOperations}/>
+      );
     }
 
     if (loadingState !== "creatingLocalGame" && currentGameData.current.Players && currentGameData.current.Players.length !== 0 && currentGameData.current.CurrentGame) {
       const currentPlayer = currentGameData.current.Players.find(x => x.playerId === currentGameData.current.CurrentGame.id.socketId);
 
       if (currentPlayer) {
-        setScore(<Score score={currentPlayer.score}/>);
-        setCurrentPlayerComponent(<CurrentPlayer currentPlayer={currentPlayer.name}/>);
-        setLetters(<Letters letters={currentPlayer.letters} gameOperations={socketOperations.gameOperations}/>);
+        setScore(
+          <Score score={currentPlayer.score}/>
+        );
+
+        setCurrentPlayerComponent(
+          <CurrentPlayer currentPlayer={currentPlayer.name}/>
+        );
+
+        setLetters(
+          <Letters letters={currentPlayer.letters} gameOperations={socketOperations.gameOperations}/>
+        );
       }
     }
 
