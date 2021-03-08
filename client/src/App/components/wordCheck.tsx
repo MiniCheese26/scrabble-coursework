@@ -11,16 +11,17 @@ export default function WordCheck() {
 
   const onCheckWord = async () => {
     if (inputRef.current && !isChecking) {
+      setIsChecking(true);
+
       if (currentTimeout) {
         clearTimeout(currentTimeout);
         setCurrentTimeout(null);
       }
 
-      setIsChecking(true);
-      setSubmitText("Checking word...");
       const word = inputRef.current?.value;
 
       if (word) {
+        setSubmitText("Checking word...");
         const checkResult = await fetch(DICTIONARY_URL + word);
 
         if (checkResult.ok) {

@@ -12,8 +12,154 @@ import {
   GameStates
 } from "../types/gamestate";
 import {GameState} from "./gameState";
+import {connection, server} from "websocket"
 
 const gameStates: GameStates = {};
+
+type WebsocketMethods = "createLocalGame" | "placeLetter" | "localGameCreated" | "gridStateUpdated" | "updatePlayer";
+
+class WebsocketMethod {
+  private readonly _websocketMethod: IWebsocketMethod;
+
+  constructor(method: WebsocketMethods, args: object) {
+    this._websocketMethod = {
+      method,
+      arguments: args
+    };
+  }
+
+  getJsonString() {
+    return JSON.stringify(this._websocketMethod);
+  }
+}
+
+interface IWebsocketMethod {
+  method: WebsocketMethods,
+  arguments: object
+}
+
+type CreateLocalGameArguments = {
+  localPlayers: LocalPlayer[]
+};
+
+type PlaceLetterArguments = {
+  id: GameSocketIdentification
+} & PlaceLetterArgs;
+
+class WebsocketRoom {
+  private _players: connection[];
+  private readonly _roomId: string;
+
+  get roomId(): string {
+    return this._roomId;
+  }
+
+  get players(): connection[] {
+    return this._players;
+  }
+
+  constructor(roomId: string) {
+    this._roomId = roomId;
+    this._players = [];
+  }
+
+  join(connection: connection) {
+    this._players.push(connection);
+  }
+
+  leave(connection: connection) {
+    this._players = this._players.filter(x => x !== connection);
+  }
+
+  emitToRoom(method: WebsocketMethods, args: object) {
+    const r = new WebsocketMethod(method, args).getJsonString();
+
+    for (const player of this._players) {
+      player.sendUTF(r);
+    }
+  }
+}
+
+class WebsocketRooms {
+  private _rooms: WebsocketRoom[];
+
+  constructor() {
+    this._rooms = [];
+  }
+
+  createRoom(connection: connection, roomId: string) {
+    const newRoom = new WebsocketRoom(roomId);
+    newRoom.join(connection);
+    this._rooms.push(newRoom);
+  }
+
+  deleteRoom(roomId: string) {
+    this._rooms = this._rooms.filter(x => x.roomId !== roomId);
+  }
+
+  getRoom(roomId: string): WebsocketRoom | undefined {
+    return this._rooms.find(x => x.roomId === roomId);
+  }
+}
+
+const rooms = new WebsocketRooms();
+
+function defineWebsocketMethod<T extends object>(message: IWebsocketMethod, method: WebsocketMethods, cb: (argumentss: T) => void) {
+  if (message.method === method) {
+    const messageArguments = message.arguments as T;
+
+    cb(messageArguments);
+  }
+}
+
+export function initialiseSockett(ws: server) {
+  ws.on("request", (req) => {
+    const connection = req.accept("echo-protocol");
+
+    connection.on("message", (msg) => {
+      if (msg.type === "utf8") {
+        const messageParsed: IWebsocketMethod = JSON.parse(msg.utf8Data);
+
+        defineWebsocketMethod<CreateLocalGameArguments>(messageParsed, "createLocalGame", (args) => {
+          const gameId = nanoid(8);
+
+          const newGameState = GameState.initialise(args.localPlayers);
+
+          gameStates[gameId] = newGameState;
+
+          const state = newGameState.syncState();
+
+          rooms.createRoom(connection, gameId);
+
+          const response = new WebsocketMethod("localGameCreated", {
+            grid: state.grid,
+            gameId,
+            players: state.getPlayersJson(),
+            currentPlayer: state.currentPlayer
+          }).getJsonString();
+
+          connection.sendUTF(response);
+        });
+
+        defineWebsocketMethod<PlaceLetterArguments>(messageParsed, "placeLetter", (args) => {
+          const gameState = gameStates[args.id.gameId];
+
+          const state = gameState.placeLetter(args.targetIndex, args.id.socketId, args.newData).syncState();
+
+          const gameRoom = rooms.getRoom(args.id.gameId);
+
+          gameRoom.emitToRoom("gridStateUpdated", {grid: state.grid});
+
+          const response = new WebsocketMethod("updatePlayer", {
+            player: state.getPlayer(args.id.socketId)
+          }).getJsonString();
+
+          connection.sendUTF(response);
+        });
+      }
+    });
+  });
+}
 
 export default function initialiseSocket(io: Server) {
   io.on('connection', (socket: Socket) => {

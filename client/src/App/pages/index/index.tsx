@@ -18,6 +18,7 @@ import Scores from "Components/scores";
 import LeftSection from "Components/leftSection";
 import MainSection from "Components/mainSection";
 import RightSection from "Components/rightSection";
+import {client} from "websocket";
 
 export default function Index(): JSX.Element {
   console.log("------------------------");
@@ -47,6 +48,8 @@ export default function Index(): JSX.Element {
     Players: []
   });
 
+  const sockett: MutableRefObject<client> = useRef(new client());
+
   const socket: MutableRefObject<Socket> = useRef(
     io({
       autoConnect: false
@@ -58,6 +61,18 @@ export default function Index(): JSX.Element {
     if (targetPlayerIndex !== -1) {
       currentGameData.current.Players[targetPlayerIndex] = parsedData;
     }
+  }
+
+  if (shouldInitSocket) {
+    sockett.current.on("connect", (connection) => {
+      console.log("Connected to socket");
+
+      connection.on("message", (msg) => {
+
+      });
+    })
+
+    sockett.current.connect("ws://192.168.0.66:8080/", "echo-protocol");
   }
 
   if (shouldInitSocket) {

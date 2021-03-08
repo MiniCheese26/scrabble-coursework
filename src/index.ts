@@ -3,7 +3,7 @@ import * as express from "express";
 import * as compression from "compression";
 import * as session from "express-session";
 import * as http from "http";
-import {Server} from 'socket.io';
+import {server} from "websocket";
 
 //import redis from "redis";
 //import connect_redis from "connect-redis";
@@ -12,12 +12,16 @@ import {Pool} from "pg";
 
 const app = express();
 const httpServer = http.createServer(app);
-const io = new Server(httpServer, {
+const ws = new server({
+    httpServer: httpServer,
+    autoAcceptConnections: false
+})
+/*const io = new Server(httpServer, {
     cors: {
         // Feeling lazy
         origin: '*'
     }
-});
+});*/
 
 /*const RedisStore = connect_redis(session);
 const redisClient = redis.createClient({
@@ -69,7 +73,7 @@ app.use(session({
 
 import indexRouter from "./routes/home/home";
 import userRouter from "./routes/user/user";
-import initialiseSockets from "./sockets/sockets";
+import {initialiseSockett} from "./sockets/sockets";
 
 // Sourced from https://stackoverflow.com/questions/29511404/connect-to-socket-io-server-with-specific-path-and-namespace
 const unless = (middleware: any, ...paths: string[]) => {
@@ -90,4 +94,5 @@ httpServer.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`);
 });
 
-initialiseSockets(io);
+initialiseSockett(ws);
+//initialiseSockets(io);
