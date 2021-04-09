@@ -19,17 +19,35 @@ import {State} from "./state";
 
 const castGridItem = GameStateHelpers.castGridItem;
 
+class EndOfGameManager {
+  allLettersUsed: boolean;
+  hasEnded: boolean;
+  playerAtStartOfLoop: Player;
+  lettersPlacedAtStartOfLastLoop: number;
+
+  checkIfEnded(playerId: string, lettersPlaced: number) {
+    if (playerId === this.playerAtStartOfLoop.playerId) {
+      if (lettersPlaced === this.lettersPlacedAtStartOfLastLoop) {
+        this.hasEnded = true;
+      } else {
+        this.lettersPlacedAtStartOfLastLoop = lettersPlaced;
+      }
+    }
+  }
+}
+
 export class GameState {
   private readonly _activeGrid: GameGrid;
   private readonly _baseGrid: GameGridLayout<EmptyGameGridItem>;
   private _players: Player[];
   private _letterBag: LetterBag;
-  private _currentPlayer: CurrentPlayer;
-  private _inviteCode: string;
+  private _currentPlayer!: CurrentPlayer;
+  private _inviteCode!: string;
   private _letterCount: number;
   private _turnIndex: number;
   private _lettersPlacedInTurn: number[];
   private _errors: string[];
+  private _endOfGameManager: EndOfGameManager;
 
   constructor() {
     this._activeGrid = new GameGrid();
@@ -40,6 +58,7 @@ export class GameState {
     this._turnIndex = 0;
     this._lettersPlacedInTurn = [];
     this._errors = [];
+    this._endOfGameManager = new EndOfGameManager();
   }
 
   static initialise(players: LocalPlayer[]): GameState | null {
@@ -84,7 +103,7 @@ export class GameState {
     return this._inviteCode;
   }
 
-  private _getPlayer(playerId: string): Player | null {
+  private _getPlayer(playerId: string): Player | undefined {
     return this._players.find(x => x.playerId === playerId);
   }
 
@@ -109,7 +128,9 @@ export class GameState {
       return false;
     }
 
-    if (!targetPlayer.letters.hasLetter(value.letter, value.value)) {
+    if (value.value !== 0 && !targetPlayer.letters.hasLetter(value.letter, value.value)) {
+      return false;
+    } else if (value.value === 0 && !targetPlayer.letters.hasLetterWhere(x => x.value === 0)) {
       return false;
     }
 
@@ -143,11 +164,19 @@ export class GameState {
     return true;
   }
 
-  placeLetter(gridIndex: number, playerId: string, value: Letter): GameState {
+  placeLetter(gridIndex: number, playerId: string, value: Letter, oldGridIndex?: number): GameState {
     if (!this._validateLetter(gridIndex, playerId, value)) {
+      if (oldGridIndex !== undefined) {
+        return this._placeLetterInternal(oldGridIndex, playerId, value);
+      }
+
       return this;
     }
 
+    return this._placeLetterInternal(gridIndex, playerId, value);
+  }
+
+  private _placeLetterInternal(gridIndex: number, playerId: string, value: Letter): GameState {
     this._activeGrid.grid[gridIndex].gridItem = {
       empty: false,
       letter: value.letter,
@@ -157,21 +186,26 @@ export class GameState {
       turnIndex: this._turnIndex
     };
 
-    this._getCurrentPlayer().letters.removeLetter(value);
+    if (value.value === 0) {
+      this._getCurrentPlayer().letters.removeLetterWhere(x => x.value === 0);
+    } else {
+      this._getCurrentPlayer().letters.removeLetter(value);
+    }
+
     this._lettersPlacedInTurn.push(gridIndex);
     this._lettersPlacedInTurn.sort();
     this._letterCount++;
     return this;
   }
 
-  removeBoardLetter(gridIndex: number, playerId: string): GameState {
+  removeBoardLetter(gridIndex: number, playerId: string, isBeingMoved: boolean): GameState {
     const gridItem = this._activeGrid.grid[gridIndex];
 
     if (gridItem.gridItem.empty === false && gridItem.gridItem.playerId === playerId && this._lettersPlacedInTurn.includes(gridIndex)) {
       const targetPlayer = this._players.find(x => x.playerId === playerId);
 
-      targetPlayer.letters.addLetter({
-        letter: gridItem.gridItem.letter,
+      targetPlayer!.letters.addLetter({
+        letter: gridItem.gridItem.value === 0 && !isBeingMoved ? "" : gridItem.gridItem.letter,
         value: gridItem.gridItem.value,
       });
 
@@ -259,7 +293,7 @@ export class GameState {
   private _resetTurn() {
     for (const index of this._lettersPlacedInTurn) {
       const placedLetter = castGridItem<FilledGameGridItem>(this._activeGrid.grid[index]);
-      this.removeBoardLetter(index, placedLetter.gridItem.playerId);
+      this.removeBoardLetter(index, placedLetter.gridItem.playerId, false);
     }
   }
 
@@ -282,7 +316,13 @@ export class GameState {
     }
 
     this._lettersPlacedInTurn = [];
+
+    if (this._endOfGameManager.allLettersUsed) {
+      this._endOfGameManager.checkIfEnded(this._getCurrentPlayer().playerId, this._letterCount);
+    }
+
     this._givePlayerLetters(this._getCurrentPlayer().playerId);
+
     this._currentPlayer.nextPlayer();
     this._turnIndex++;
 
@@ -313,6 +353,13 @@ export class GameState {
 
     const lettersNeeded = 7 - totalLetters;
     const randomLetters = this._letterBag.getRandomLetters(lettersNeeded);
+
+    if (randomLetters.length === 0 && !this._endOfGameManager.allLettersUsed) {
+      this._endOfGameManager.allLettersUsed = true;
+      this._endOfGameManager.playerAtStartOfLoop = this._getCurrentPlayer();
+      this._endOfGameManager.lettersPlacedAtStartOfLastLoop = this._letterCount;
+    }
+
     player.letters.addLetters(randomLetters);
   }
 
@@ -322,6 +369,6 @@ export class GameState {
   }
 
   syncState(): State {
-    return new State(JSON.stringify(this._activeGrid.grid), this._players, this._getCurrentPlayer().playerId);
+    return new State(this._activeGrid.grid, this._players, this._getCurrentPlayer().playerId, this._endOfGameManager.allLettersUsed, this._endOfGameManager.hasEnded);
   }
 }

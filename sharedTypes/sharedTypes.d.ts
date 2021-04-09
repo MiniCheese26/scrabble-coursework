@@ -14,6 +14,7 @@ export interface Letter {
 export interface PlaceLetterArgs {
   targetIndex: number;
   newData: Letter;
+  oldIndex?: number;
 }
 
 export interface GameSocketIdentification {
@@ -26,8 +27,25 @@ export interface Coordinate {
   y: number
 }
 
-export interface RemoveBoardLetterArgs {
-  index: number
+export interface SocketArgs {
+  id?: GameSocketIdentification
+}
+
+export interface RemoveBoardLetterArgs extends SocketArgs {
+  index: number,
+  isBeingMoved: boolean
+}
+
+export interface RemovePlayerLettersArgs extends SocketArgs {
+  letters: Letter[]
+}
+
+export interface EndTurnArgs extends SocketArgs {
+  type: GameType
+}
+
+export interface CreateLocalGameArgs extends SocketArgs {
+  localPlayers: LocalPlayer[]
 }
 
 export interface ExchangeLettersArgs {
@@ -73,4 +91,23 @@ export type GameGridItem = EmptyGameGridItem | FilledGameGridItem;
 export interface GameGridElement<T extends GameGridItem> {
   gridItem: T,
   index: number
+}
+
+export type WebsocketMethods =
+  "createLocalGame"
+  | "placeLetter"
+  | "localGameCreated"
+  | "gridStateUpdated"
+  | "updatePlayer"
+  | "removeBoardLetter"
+  | "endTurn"
+  | "updatePlayers"
+  | "removePlayerLetters"
+  | "givePlayerLetters"
+  | "gameCanEnd"
+  | "gameEnded";
+
+export interface IWebsocketMethod {
+  method: WebsocketMethods,
+  arguments: Object
 }

@@ -31,11 +31,7 @@ export class GameStateHelpers {
       {x: x + 1, y},
       {x: x - 1, y},
       {x, y: y - 1},
-      {x: x + 1, y: y - 1},
-      {x: x - 1, y: y - 1},
       {x, y: y + 1},
-      {x: x + 1, y: y + 1},
-      {x: x - 1, y: y + 1},
     ];
   }
 

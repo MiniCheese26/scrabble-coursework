@@ -18,9 +18,11 @@ export const WordCheckInput = styled(InputOption)`
   margin-bottom: unset;
 `;
 
-export const WordCheckSubmit = styled.button`
+export const WordCheckSubmit = styled.button<{backgroundColour: string, foregroundColour: string}>`
   ${GameButton};
   flex: 1;
   max-height: 70px;
   margin-top: auto;
+  background-color: ${props => props.backgroundColour};
+  color: ${props => props.foregroundColour};
 `;

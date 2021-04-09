@@ -1,11 +1,13 @@
 import React, {useRef, useState} from "react";
-import {WordCheckInput, WordCheckSubmit, WordCheckWrapper } from "Styles/components/wordCheck/styles";
+import {WordCheckInput, WordCheckSubmit, WordCheckWrapper} from "Styles/components/wordCheck/styles";
 
 const DICTIONARY_URL = 'https://dictionary-dot-sse-2020.nw.r.appspot.com/';
 
 export default function WordCheck() {
   const [isChecking, setIsChecking] = useState(false);
   const [submitText, setSubmitText] = useState("Check Word");
+  const [submitBackgroundColour, setSubmitBackgroundColour] = useState("black");
+  const [submitForegroundColour, setSubmitForegroundColour] = useState("white");
   const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -26,12 +28,17 @@ export default function WordCheck() {
 
         if (checkResult.ok) {
           setSubmitText("Word is valid");
+          setSubmitBackgroundColour("#64b450");
         } else {
           setSubmitText("Word is invalid");
+          setSubmitBackgroundColour("#ED4545");
+          setSubmitForegroundColour("black");
         }
 
         const timeoutId = setTimeout(() => {
           setSubmitText("Check Word");
+          setSubmitBackgroundColour("black");
+          setSubmitForegroundColour("white");
           setCurrentTimeout(null);
         }, 2000);
 
@@ -42,10 +49,21 @@ export default function WordCheck() {
     }
   };
 
+  const onKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      await onCheckWord();
+    }
+  }
+
   return (
     <WordCheckWrapper>
-      <WordCheckInput ref={inputRef} placeholder={"Enter word..."}/>
-      <WordCheckSubmit onClick={async () => {await onCheckWord();}}>{submitText}</WordCheckSubmit>
+      <WordCheckInput ref={inputRef} placeholder={"Enter word..."} onKeyDown={async (e: React.KeyboardEvent) => {
+        await onKeyDown(e)
+      }}/>
+      <WordCheckSubmit backgroundColour={submitBackgroundColour} foregroundColour={submitForegroundColour}
+                       onClick={async () => {
+                         await onCheckWord();
+                       }}>{submitText}</WordCheckSubmit>
     </WordCheckWrapper>
   );
 }

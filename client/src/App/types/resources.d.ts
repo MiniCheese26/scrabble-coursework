@@ -24,3 +24,9 @@ declare module "react-dnd-preview" {
 
     function usePreview(): UsePreviewResults;
 }
+
+export declare global {
+    interface String {
+        toTitleCase(): string;
+    }
+}

@@ -10,7 +10,7 @@ export type RightSectionProps = {
   currentPlayer: React.ReactElement,
   letters: React.ReactElement,
   scores: React.ReactElement,
-  activeErrors: string[],
+  errors: React.ReactElement,
   gameOperations: GameOperations
 };
 
@@ -25,7 +25,7 @@ export default function RightSection(props: RightSectionProps) {
           {props.letters}
           <WordCheck/>
           {props.scores}
-          {props.activeErrors.map(x => <p>{x}</p>)}
+          {props.errors}
           <EndTurn gameOperations={props.gameOperations}/>
         </Route>
         <Route component={Empty}/>

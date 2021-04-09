@@ -34,4 +34,4 @@ export type CurrentGame = {
   id: GameSocketIdentification
 };
 
-export type IndexStates = "creatingLocalGame" | "notLoading";
+export type IndexStates = "creatingLocalGame" | "connectingToSocket" | "notLoading";

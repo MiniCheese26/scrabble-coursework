@@ -20,7 +20,7 @@ export const Panel = styled.section`
 `;
 
 export const MainSection = styled(Panel)`
-  flex: 4 1 66%;
+  flex: 4 1 80%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -32,7 +32,7 @@ export const MainSection = styled(Panel)`
   }
   
   @media (min-width: 992px) {
-    max-width: 60%;
+    max-width: 80%;
   }
 `;
 
@@ -50,7 +50,7 @@ export const BackOption = styled.button`
 `;
 
 export const RightSection = styled(Panel)`
-  flex: 1 2 16.5%;
+  flex: 1 2 20%;
   display: flex;
   flex-direction: column;
   margin-right: 0.5rem;

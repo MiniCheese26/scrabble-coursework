@@ -24,7 +24,7 @@ export const FreeGridItemElement = styled(GridItemElementBase)<{backgroundColour
 `;
 
 export const UsedGridItemElement = styled(GridItemElementBase)`
-  background: #FFF;
+  background: #E8DAB2;
   color: black;
   grid-template-rows: repeat(3, 1fr);
   grid-template-areas:

@@ -16,29 +16,45 @@ export default function GridItem(props: GridItemProps): React.ReactElement {
     drop: (item) => {
       switch (item.type) {
         case "letter":
+          if (item.letter === "") {
+            const customLetter = prompt('Enter the desired letter');
+
+            if (customLetter !== null && customLetter.trim() !== "" && customLetter.length === 1) {
+              props.gameOperations.placeLetter({
+                targetIndex: props.index,
+                newData: {
+                  letter: customLetter.toUpperCase(),
+                  value: item.value
+                }
+              });
+            }
+          } else {
+            props.gameOperations.placeLetter({
+              targetIndex: props.index,
+              newData: {
+                letter: item.letter,
+                value: item.value,
+              },
+            });
+          }
+          break;
+        case "gridLetter":
+          props.gameOperations.removeBoardLetter({
+            index: item.index,
+            isBeingMoved: true
+          });
           props.gameOperations.placeLetter({
             targetIndex: props.index,
             newData: {
               letter: item.letter,
               value: item.value,
-            }
-          });
-          break;
-        case "gridLetter":
-          props.gameOperations.removeBoardLetter({
-            index: item.index
-          });
-          props.gameOperations.placeLetter({
-            targetIndex: props.index,
-            newData: {
-              letter: item.letter,
-              value: item.value
-            }
+            },
+            oldIndex: item.index
           });
           break;
       }
     },
-    canDrop: () => {
+    canDrop: _ => {
       return props.gridItem.empty;
     },
   });
@@ -47,8 +63,8 @@ export default function GridItem(props: GridItemProps): React.ReactElement {
     item: {
       type: "gridLetter",
       index: props.index,
-      letter: props.gridItem.empty ? "" : props.gridItem.letter,
-      value: props.gridItem.empty ? 0 : props.gridItem.value
+      letter: props.gridItem.empty ? "#" : props.gridItem.letter,
+      value: props.gridItem.empty ? -1 : props.gridItem.value
     },
     canDrag: _ => {
       return !props.gridItem.empty;

@@ -5,7 +5,6 @@ import {Configuration as WebpackDevServerConfiguration} from "webpack-dev-server
 
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-import ESLintPlugin from "eslint-webpack-plugin";
 
 interface Configuration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;
@@ -66,9 +65,9 @@ const config: Configuration = {
       extensions: ["js", "jsx", "ts", "tsx"],
       eslintPath: "./.eslintrc.json",
     }),*/
-    new ForkTsCheckerWebpackPlugin({
+    /*new ForkTsCheckerWebpackPlugin({
       async: false
-    })
+    })*/
   ],
   devtool: "eval-source-map",
   devServer: {

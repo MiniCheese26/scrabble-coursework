@@ -65,6 +65,10 @@ export class PlayerLetters {
     return this._letters.some(x => x.letter === letter && x.value === value);
   }
 
+  hasLetterWhere(predicate: (letter: Letter) => boolean) {
+    return this._letters.some(predicate);
+  }
+
   removeLetter(letter: Letter) {
     const targetLetter = this._letters.find(x => x.letter === letter.letter);
 
@@ -77,5 +81,11 @@ export class PlayerLetters {
     }
 
     this._sortLetters();
+  }
+
+  removeLetterWhere(predicate: (letter: Letter) => boolean) {
+    const targetLetter = this._letters.find(predicate);
+
+    this.removeLetter(targetLetter);
   }
 }
