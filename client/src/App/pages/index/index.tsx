@@ -49,7 +49,7 @@ export default function Index(): JSX.Element {
     Players: []
   });
 
-  const sockett: MutableRefObject<w3cwebsocket> = useRef(new w3cwebsocket("wss://loc0ded.com/scrabble/"));
+  const socket: MutableRefObject<w3cwebsocket> = useRef(new w3cwebsocket("wss://loc0ded.com/scrabble/"));
 
   const hasNotAnnouncedOutOfLetters: MutableRefObject<boolean> = useRef(true);
 
@@ -62,12 +62,12 @@ export default function Index(): JSX.Element {
   }
 
   if (shouldInitSocket) {
-    sockett.current.onopen = () => {
+    socket.current.onopen = () => {
       console.log("Connected to socket");
 
       setLoadingState("notLoading");
 
-      sockett.current.onmessage = (message) => {
+      socket.current.onmessage = (message) => {
         if (typeof message.data === "string") {
           const messageParsed: IWebsocketMethod = JSON.parse(message.data);
 
@@ -146,86 +146,16 @@ export default function Index(): JSX.Element {
     setShouldInitSocket(false);
   }
 
-  sockett.current.onclose = () => {
+  socket.current.onclose = () => {
     console.log("Disconnected from socket");
   }
 
-  /*if (shouldInitSocket) {
-    socket.current.open();
-
-    socket.current.on("connect", () => {
-      console.log("Connected to socket");
-    });
-
-    socket.current.on("disconnected", () => {
-      console.error("Lost connection to socket");
-    });
-
-    socket.current.on("debugMessage", (args: string) => {
-      console.debug(args);
-    });
-
-    socket.current.on("localGameCreated", (grid: string, gameId: string, playerData: string) => {
-      const gridParsed: GameGridElement<GameGridItem>[] = JSON.parse(grid);
-      const playersParsed: SharedPlayer[] = JSON.parse(playerData);
-      setGrid(gridParsed);
-
-      currentGameData.current.CurrentGame = {
-        active: true,
-        id: {gameId, socketId: playersParsed[0].playerId},
-        type: "local"
-      };
-
-      currentGameData.current.Players = playersParsed;
-      setLoadingState("notLoading");
-      setUpdateComponentData(true);
-    });
-
-    socket.current.on("gridStateUpdated", (grid: string) => {
-      const gridParsed: GameGridElement<GameGridItem>[] = JSON.parse(grid);
-      setGrid(gridParsed);
-      setUpdateComponentData(true);
-    });
-
-    socket.current.on("updatePlayer", (data: string) => {
-      const parsedData: SharedPlayer = JSON.parse(data);
-
-      updatePlayer(parsedData);
-
-      setUpdateComponentData(true);
-    });
-
-    socket.current.on("updatePlayers", (data: string) => {
-      const parsedData: SharedPlayer[] = JSON.parse(data);
-
-      console.log(parsedData);
-
-      for (const player of parsedData) {
-        updatePlayer(player);
-      }
-
-      setUpdateComponentData(true);
-    });
-
-    socket.current.on("endTurn", (currentPlayer: string, errors: string) => {
-      currentGameData.current.CurrentGame.id.socketId = currentPlayer;
-
-      const errorsParsed: string[] = JSON.parse(errors);
-      setActiveErrors(errorsParsed);
-
-      setUpdateComponentData(true);
-    });
-
-    setShouldInitSocket(false);
-  }*/
-
   const send = (data: IWebsocketMethod) => {
     data.arguments = {...data.arguments, ...{id: currentGameData.current.CurrentGame.id}}
-    sockett.current.send(JSON.stringify(data));
+    socket.current.send(JSON.stringify(data));
   }
 
   const createLocalGame = (players: LocalPlayer[]) => {
-    //socket.current.emit("createLocalGame", players);
     send({
       method: "createLocalGame",
       arguments: {
@@ -235,7 +165,6 @@ export default function Index(): JSX.Element {
   };
 
   const placeLetter = (args: PlaceLetterArgs) => {
-    //socket.current.emit("placeLetter", currentGameData.current.CurrentGame.id, args);
     send({
       method: "placeLetter",
       arguments: args
@@ -243,7 +172,6 @@ export default function Index(): JSX.Element {
   };
 
   const removeBoardLetter = (args: RemoveBoardLetterArgs) => {
-    //socket.current.emit("removeBoardLetter", currentGameData.current.CurrentGame.id, args);
     send({
       method: "removeBoardLetter",
       arguments: args
@@ -251,7 +179,6 @@ export default function Index(): JSX.Element {
   };
 
   const removePlayerLetters = (letters: Letter[]) => {
-    //socket.current.emit("removePlayerLetters", currentGameData.current.CurrentGame.id, letters);
     send({
       method: "removePlayerLetters",
       arguments: {
@@ -261,7 +188,6 @@ export default function Index(): JSX.Element {
   };
 
   const endTurn = () => {
-    //socket.current.emit("endTurn", currentGameData.current.CurrentGame.id, currentGameData.current.CurrentGame.type);
     send({
       method: "endTurn",
       arguments: {type: currentGameData.current.CurrentGame.type}
