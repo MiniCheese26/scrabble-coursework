@@ -13,7 +13,8 @@ import {Pool} from "pg";
 const app = express();
 const httpServer = http.createServer(app);
 const ws = new Server({
-    server: httpServer
+    server: httpServer,
+    path: '/ws'
 });
 /*const io = new Server(httpServer, {
     cors: {
@@ -71,14 +72,12 @@ app.use(session({
 }));
 
 import indexRouter from "./routes/home/home";
-import userRouter from "./routes/user/user";
-import {initialiseSocket} from "./sockets/sockets";
+import {gameStateRouter, initialiseSocket} from "./sockets/sockets";
 
 // Sourced from https://stackoverflow.com/questions/29511404/connect-to-socket-io-server-with-specific-path-and-namespace
 const unless = (middleware: any, ...paths: string[]) => {
     return (req: any, res: any, next: any) => {
-        console.log(paths.includes(req.path));
-        if (paths.includes(req.path)) {
+        if (paths.some(x => req.path.match(`^\\/${x}\\/?.*$`))) {
             return next();
         } else {
             return middleware(req, res, next);
@@ -86,8 +85,8 @@ const unless = (middleware: any, ...paths: string[]) => {
     }
 }
 
-app.use(unless(indexRouter, '/socket.io/', 'user'));
-app.use("/user", userRouter);
+app.use(unless(indexRouter, 'ws', 'gameState'));
+app.use("/gameState", gameStateRouter);
 
 httpServer.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`);

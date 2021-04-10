@@ -5,14 +5,28 @@ import {
   WebsocketMethods, RemovePlayerLettersArgs, SocketArgs, EndTurnArgs, CreateLocalGameArgs,
 } from 'SharedTypes/sharedTypes';
 import {nanoid} from 'nanoid';
-import {
-  GameStates
-} from "../types/gamestate";
 import {GameState} from "./gameState";
 import {Server} from "ws"
 import WebSocket = require("ws");
+import * as express from "express";
 
-const gameStates: GameStates = {};
+declare global {
+  interface WebSocket {
+    id: string;
+  }
+}
+
+class GameStates {
+  public states: { [roomId: string]: GameState };
+
+  constructor() {
+    this.states = {};
+  }
+
+  deleteGameState(gameState: GameState) {
+    this.states[gameState.gameId] = null;
+  }
+}
 
 class WebsocketMethod {
   private readonly _websocketMethod: IWebsocketMethod;
@@ -46,6 +60,7 @@ class WebsocketRoomConnection {
 class WebsocketRoom {
   private _connections: WebsocketRoomConnection[];
   private readonly _roomId: string;
+  private readonly _gameId: string;
 
   get roomId(): string {
     return this._roomId;
@@ -55,8 +70,13 @@ class WebsocketRoom {
     return this._connections;
   }
 
-  constructor(roomId: string) {
+  get gameId(): string {
+    return this._gameId;
+  }
+
+  constructor(roomId: string, gameId: string) {
     this._roomId = roomId;
+    this._gameId = gameId;
     this._connections = [];
   }
 
@@ -75,6 +95,10 @@ class WebsocketRoom {
       connection.connection.send(r);
     }
   }
+
+  getWebsocketConnectionByConnection(connection: WebSocket): WebsocketRoomConnection | undefined {
+    return this.connections.find(x => x.connection === connection);
+  }
 }
 
 class WebsocketRooms {
@@ -84,8 +108,8 @@ class WebsocketRooms {
     this._rooms = [];
   }
 
-  createRoom(connection: WebsocketRoomConnection, roomId: string) {
-    const newRoom = new WebsocketRoom(roomId);
+  createRoom(connection: WebsocketRoomConnection, roomId: string, gameId: string) {
+    const newRoom = new WebsocketRoom(roomId, gameId);
     newRoom.join(connection);
     this._rooms.push(newRoom);
   }
@@ -96,6 +120,10 @@ class WebsocketRooms {
 
   getRoom(roomId: string): WebsocketRoom | undefined {
     return this._rooms.find(x => x.roomId === roomId);
+  }
+
+  getRoomByConnection(connection: WebSocket): WebsocketRoom | undefined {
+    return this._rooms.find(x => x.getWebsocketConnectionByConnection(connection) !== undefined);
   }
 }
 
@@ -109,6 +137,8 @@ function defineWebsocketMethod<T extends object>(message: IWebsocketMethod, meth
   }
 }
 
+const gameStates = new GameStates();
+
 export function initialiseSocket(ws: Server) {
   ws.on("connection", (connection) => {
     connection.on("message", (message) => {
@@ -118,16 +148,16 @@ export function initialiseSocket(ws: Server) {
         defineWebsocketMethod<CreateLocalGameArgs>(messageParsed, "createLocalGame", (args) => {
           const gameId = nanoid(8);
 
-          const newGameState = GameState.initialise(args.localPlayers);
+          const newGameState = GameState.initialise(args.localPlayers, gameId);
 
-          gameStates[gameId] = newGameState;
-
-          const state = newGameState.syncState();
+          gameStates.states[gameId] = newGameState;
 
           rooms.createRoom({
             connection: connection,
             socketId: args.id.socketId
-          }, gameId);
+          }, gameId, gameId);
+
+          const state = newGameState.syncState();
 
           const response = new WebsocketMethod("localGameCreated", {
             grid: state.grid,
@@ -140,7 +170,7 @@ export function initialiseSocket(ws: Server) {
         });
 
         defineWebsocketMethod<PlaceLetterArguments>(messageParsed, "placeLetter", (args) => {
-          const gameState = gameStates[args.id.gameId];
+          const gameState = gameStates.states[args.id.gameId];
 
           const state = gameState.placeLetter(args.targetIndex, args.id.socketId, args.newData, args.oldIndex).syncState();
 
@@ -156,7 +186,7 @@ export function initialiseSocket(ws: Server) {
         });
 
         defineWebsocketMethod<RemoveBoardLetterArgs>(messageParsed, "removeBoardLetter", (args) => {
-          const gameState = gameStates[args.id.gameId];
+          const gameState = gameStates.states[args.id.gameId];
 
           const state = gameState.removeBoardLetter(args.index, args.id.socketId, args.isBeingMoved).syncState();
 
@@ -172,7 +202,7 @@ export function initialiseSocket(ws: Server) {
         });
 
         defineWebsocketMethod<RemovePlayerLettersArgs>(messageParsed, "removePlayerLetters", (args) => {
-          const gameState = gameStates[args.id.gameId];
+          const gameState = gameStates.states[args.id.gameId];
 
           const state = gameState.removePlayerLetters(args.id.socketId, ...args.letters).syncState();
 
@@ -184,7 +214,7 @@ export function initialiseSocket(ws: Server) {
         });
 
         defineWebsocketMethod<SocketArgs>(messageParsed, "givePlayerLetters", (args) => {
-          const gameState = gameStates[args.id.gameId];
+          const gameState = gameStates.states[args.id.gameId];
 
           const state = gameState.givePlayerLetters(args.id.socketId).syncState();
 
@@ -197,7 +227,7 @@ export function initialiseSocket(ws: Server) {
 
         defineWebsocketMethod<EndTurnArgs>(messageParsed, "endTurn", (args) => {
           (async () => {
-            const gameState = gameStates[args.id.gameId];
+            const gameState = gameStates.states[args.id.gameId];
 
             const errors = await gameState.processTurn();
 
@@ -207,7 +237,7 @@ export function initialiseSocket(ws: Server) {
 
             gameRoom.emitToRoom("gridStateUpdated", {
               grid: state.grid
-            })
+            });
 
             if (args.type === 'local') {
               const response = new WebsocketMethod("updatePlayers", {
@@ -232,13 +262,57 @@ export function initialiseSocket(ws: Server) {
 
             if (state.gameOver) {
               gameRoom.emitToRoom("gameEnded");
-            }
-            else if (state.allLettersUsed) {
+              gameStates.deleteGameState(gameState);
+              rooms.deleteRoom(args.id.gameId);
+            } else if (state.allLettersUsed) {
               gameRoom.emitToRoom("gameCanEnd");
             }
           })();
         });
       }
     });
-  })
+    connection.on("close", (code, reason) => {
+      console.log("code", code);
+      console.log("reason", reason);
+
+      if (code === 1001 || code === 1006) {
+        const l = rooms.getRoomByConnection(connection);
+
+        if (l !== undefined) {
+          const c = l.getWebsocketConnectionByConnection(connection);
+          l.leave(c.socketId);
+          const g = gameStates.states[l.gameId];
+          gameStates.deleteGameState(g);
+
+          if (l.connections.length === 0) {
+            rooms.deleteRoom(l.roomId);
+          }
+
+          connection.terminate();
+        }
+
+        const a = 1;
+
+      } else {
+      }
+    });
+  });
 }
+
+export const gameStateRouter = express.Router();
+
+gameStateRouter.post("/canExchange", (req, res) => {
+  const body = req.body as GameSocketIdentification;
+
+  const gameState = gameStates.states[body.gameId];
+
+  if (gameState) {
+    const sync = gameState.syncState();
+
+    return res.json({
+      canExchange: sync.allLettersUsed || true
+    });
+  }
+
+  return res.sendStatus(500).end();
+});

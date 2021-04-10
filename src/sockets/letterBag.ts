@@ -59,4 +59,8 @@ export class LetterBag {
 
     this._letters[indexOfLetterToAdd].count++;
   }
+
+  hasLettersLeft() {
+    return this._letters.reduce((a, b) => a + b.count, 0) > 0;
+  }
 }

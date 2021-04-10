@@ -37,6 +37,7 @@ class EndOfGameManager {
 }
 
 export class GameState {
+  private readonly _gameId: string;
   private readonly _activeGrid: GameGrid;
   private readonly _baseGrid: GameGridLayout<EmptyGameGridItem>;
   private _players: Player[];
@@ -49,7 +50,8 @@ export class GameState {
   private _errors: string[];
   private _endOfGameManager: EndOfGameManager;
 
-  constructor() {
+  constructor(gameId: string) {
+    this._gameId = gameId;
     this._activeGrid = new GameGrid();
     this._baseGrid = {};
     this._players = [];
@@ -61,8 +63,8 @@ export class GameState {
     this._endOfGameManager = new EndOfGameManager();
   }
 
-  static initialise(players: LocalPlayer[]): GameState | null {
-    const gameState = new GameState();
+  static initialise(players: LocalPlayer[], gameId: string): GameState | null {
+    const gameState = new GameState(gameId);
 
     // initialise grid
     for (let i = 0; i < 15 * 15; i++) {
@@ -103,6 +105,10 @@ export class GameState {
     return this._inviteCode;
   }
 
+  get gameId(): string {
+    return this._gameId;
+  }
+
   private _getPlayer(playerId: string): Player | undefined {
     return this._players.find(x => x.playerId === playerId);
   }
@@ -134,10 +140,6 @@ export class GameState {
       return false;
     }
 
-    if (this._letterCount !== 0 && this._checkIfGridIndexIsIsolated(gridIndex)) {
-      return false;
-    }
-
     if (this._turnIndex === 0) {
       const coordinates = GameStateHelpers.indexToXY(gridIndex);
 
@@ -147,21 +149,6 @@ export class GameState {
     }
 
     return targetIndex.gridItem.empty;
-  }
-
-  private _checkIfGridIndexIsIsolated(gridIndex: number) {
-    const surroundingCoordinates = GameStateHelpers.getSurroundingCoordinatesAsArray(gridIndex);
-
-    for (const surroundingCoordinate of surroundingCoordinates) {
-      const index = GameStateHelpers.XYToIndex(surroundingCoordinate);
-      const surroundingGridElement = this._activeGrid.grid[index];
-
-      if (surroundingGridElement && !surroundingGridElement.gridItem.empty) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   placeLetter(gridIndex: number, playerId: string, value: Letter, oldGridIndex?: number): GameState {
@@ -243,12 +230,35 @@ export class GameState {
     return wordScore;
   }
 
+  private _validateLetterIsNotIsolated(word: GameGridElement<FilledGameGridItem>[], letter: GameGridElement<FilledGameGridItem>): boolean {
+    const surroundingCoordinates = GameStateHelpers.getSurroundingCoordinatesAsArray(letter.index);
+
+    for (const surroundingCoordinate of surroundingCoordinates) {
+      const index = GameStateHelpers.XYToIndex(surroundingCoordinate);
+      const surroundingGridElement = this._activeGrid.grid[index];
+
+      if (surroundingGridElement && !surroundingGridElement.gridItem.empty) {
+        if (word.find(x => x.gridItem.orderIndex === castGridItem<FilledGameGridItem>(surroundingGridElement).gridItem.orderIndex) === undefined) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   private async _processWord(word: GameGridElement<FilledGameGridItem>[]) {
     const wordJoined = word.map(x => x.gridItem.letter).join("");
     const isValidWord = await GameStateHelpers.checkWord(wordJoined);
+    const isValidPlacement = word.some(x => this._validateLetterIsNotIsolated(word, x));
 
     if (!isValidWord) {
       this._errors.push(`${wordJoined.toLowerCase()} is not a valid word`);
+      return -1;
+    }
+
+    if (!isValidPlacement && this._turnIndex !== 0) {
+      this._errors.push(`Invalid placement of ${wordJoined.toLowerCase()}`);
       return -1;
     }
 
@@ -319,6 +329,21 @@ export class GameState {
 
     if (this._endOfGameManager.allLettersUsed) {
       this._endOfGameManager.checkIfEnded(this._getCurrentPlayer().playerId, this._letterCount);
+
+      if (this._getCurrentPlayer().letters.letters.length === 0) {
+        this._endOfGameManager.hasEnded = true;
+
+        for (const player of this._players) {
+          const total = player.letters.getTotal();
+          player.score -= total;
+        }
+      }
+    }
+
+    if (!this._letterBag.hasLettersLeft() && !this._endOfGameManager.allLettersUsed) {
+      this._endOfGameManager.allLettersUsed = true;
+      this._endOfGameManager.playerAtStartOfLoop = this._getCurrentPlayer();
+      this._endOfGameManager.lettersPlacedAtStartOfLastLoop = this._letterCount;
     }
 
     this._givePlayerLetters(this._getCurrentPlayer().playerId);
@@ -353,12 +378,6 @@ export class GameState {
 
     const lettersNeeded = 7 - totalLetters;
     const randomLetters = this._letterBag.getRandomLetters(lettersNeeded);
-
-    if (randomLetters.length === 0 && !this._endOfGameManager.allLettersUsed) {
-      this._endOfGameManager.allLettersUsed = true;
-      this._endOfGameManager.playerAtStartOfLoop = this._getCurrentPlayer();
-      this._endOfGameManager.lettersPlacedAtStartOfLastLoop = this._letterCount;
-    }
 
     player.letters.addLetters(randomLetters);
   }

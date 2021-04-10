@@ -371,7 +371,7 @@ export class LetterBlank extends GameStateLetter {
     }
 }
 
-export const GameLetters = [
+/*export const GameLetters = [
     new LetterA(),
     new LetterB(),
     new LetterC(),
@@ -399,4 +399,8 @@ export const GameLetters = [
     new LetterY(),
     new LetterZ(),
     new LetterBlank(),
+];*/
+
+export const GameLetters = [
+    new LetterA(),
 ];

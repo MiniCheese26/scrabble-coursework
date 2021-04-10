@@ -49,7 +49,7 @@ export default function Index(): JSX.Element {
     Players: []
   });
 
-  const socket: MutableRefObject<w3cwebsocket> = useRef(new w3cwebsocket("wss://loc0ded.com/scrabble/"));
+  const socket: MutableRefObject<w3cwebsocket | null> = useRef(null);
 
   const hasNotAnnouncedOutOfLetters: MutableRefObject<boolean> = useRef(true);
 
@@ -62,18 +62,20 @@ export default function Index(): JSX.Element {
   }
 
   if (shouldInitSocket) {
+    socket.current = new w3cwebsocket("ws://localhost:8080/ws");
+
     socket.current.onopen = () => {
       console.log("Connected to socket");
 
       setLoadingState("notLoading");
 
-      socket.current.onmessage = (message) => {
+      socket.current!.onmessage = (message) => {
         if (typeof message.data === "string") {
           const messageParsed: IWebsocketMethod = JSON.parse(message.data);
 
           if (messageParsed.method === "localGameCreated") {
             const argumentsParsed = messageParsed.arguments as {
-              grid:  GameGridElement<GameGridItem>[],
+              grid: GameGridElement<GameGridItem>[],
               gameId: string,
               players: SharedPlayer[],
               currentPlayer: string
@@ -105,8 +107,7 @@ export default function Index(): JSX.Element {
             updatePlayer(k.player);
 
             setUpdateComponentData(true);
-          }
-          else if (messageParsed.method === "updatePlayers") {
+          } else if (messageParsed.method === "updatePlayers") {
             const argumentsParsed = messageParsed.arguments as {
               players: SharedPlayer[]
             };
@@ -116,8 +117,7 @@ export default function Index(): JSX.Element {
             }
 
             setUpdateComponentData(true);
-          }
-          else if (messageParsed.method === "endTurn") {
+          } else if (messageParsed.method === "endTurn") {
             const argumentsParsed = messageParsed.arguments as {
               currentPlayer: string,
               errors: string[]
@@ -128,14 +128,12 @@ export default function Index(): JSX.Element {
             setActiveErrors(argumentsParsed.errors);
 
             setUpdateComponentData(true);
-          }
-          else if (messageParsed.method === "gameCanEnd") {
-            if (hasNotAnnouncedOutOfLetters) {
+          } else if (messageParsed.method === "gameCanEnd") {
+            if (hasNotAnnouncedOutOfLetters.current) {
               hasNotAnnouncedOutOfLetters.current = false;
               alert("You are now out of new letters, the game will end when no more words can be made");
             }
-          }
-          else if (messageParsed.method === "gameEnded") {
+          } else if (messageParsed.method === "gameEnded") {
             setGameIsOver(true);
             setUpdateComponentData(true);
           }
@@ -143,16 +141,19 @@ export default function Index(): JSX.Element {
       }
     };
 
+    socket!.current.onclose = () => {
+      console.log("Disconnected from socket");
+    }
+
     setShouldInitSocket(false);
   }
 
-  socket.current.onclose = () => {
-    console.log("Disconnected from socket");
-  }
-
   const send = (data: IWebsocketMethod) => {
-    data.arguments = {...data.arguments, ...{id: currentGameData.current.CurrentGame.id}}
-    socket.current.send(JSON.stringify(data));
+    data.arguments = {...data.arguments, ...{id: currentGameData.current.CurrentGame.id}};
+
+    if (socket.current !== null) {
+      socket.current.send(JSON.stringify(data));
+    }
   }
 
   const createLocalGame = (players: LocalPlayer[]) => {
@@ -195,8 +196,24 @@ export default function Index(): JSX.Element {
   };
 
   const exchangeLetters = (args: ExchangeLettersArgs) => {
-    removePlayerLetters(args.letters);
-    endTurn();
+    let canExchange = false;
+
+    (async () => {
+      const response = await fetch("/gameState/canExchange", {
+        method: 'post',
+        body: JSON.stringify(currentGameData.current.CurrentGame.id),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(async x => await x.json() as { canExchange: boolean });
+      canExchange = response.canExchange;
+    })();
+
+    if (canExchange) {
+      removePlayerLetters(args.letters);
+      endTurn();
+    }
   };
 
   const socketOperations: SocketOperations = {
@@ -221,8 +238,7 @@ export default function Index(): JSX.Element {
   if (updateComponentData) {
     if (gameIsOver) {
       setGame(<GameOver players={currentGameData.current.Players}/>);
-    }
-    else if (loadingState !== "creatingLocalGame" && grid && Object.keys(grid).length > 0 && currentGameData.current.CurrentGame) {
+    } else if (loadingState !== "creatingLocalGame" && grid && Object.keys(grid).length > 0 && currentGameData.current.CurrentGame) {
       setGame(
         <Game grid={grid} players={currentGameData.current.Players}
               currentGame={currentGameData.current.CurrentGame}

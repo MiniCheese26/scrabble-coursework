@@ -1,5 +1,6 @@
-import styled from "styled-components";
+import styled, {css} from "styled-components";
 import {GameButton} from "Styles/globalStyles";
+import {Link} from "react-router-dom";
 
 export const Container = styled.section`
   flex: 7;
@@ -42,11 +43,19 @@ export const AnimatedDivWrapper = styled.div`
   width: 100%;
 `;
 
-export const BackOption = styled.button`
+export const BackOptionCss = css`
   ${GameButton};
   align-self: flex-start;
   flex: 0 1;
   padding: 1rem;
+`
+
+export const BackOption = styled.button`
+  ${BackOptionCss}
+`;
+
+export const BankOptionLink = styled(Link)`
+  ${BackOptionCss}
 `;
 
 export const RightSection = styled(Panel)`

@@ -41,17 +41,18 @@ export default function Letters(props: LettersProps): JSX.Element {
     accept: "gridLetter",
     drop: (item => {
       props.gameOperations.removeBoardLetter({
-        index: item.index
+        index: item.index,
+        isBeingMoved: false
       });
     })
   });
 
   const onClickTradingLetters = () => {
     if (isTradingLetters && selectedLetters.length > 0) {
-      props.gameOperations.exchangeLetters({letters: selectedLetters});
+      props.gameOperations.exchangeLetters({letters: selectedLetters, isExchanging: true});
     }
 
-    setSelectedLetters([]);
+    setSelectedLetters(() => []);
     setIsTradingLetters(prev => !prev);
   }
 

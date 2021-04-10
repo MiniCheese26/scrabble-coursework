@@ -49,7 +49,8 @@ export interface CreateLocalGameArgs extends SocketArgs {
 }
 
 export interface ExchangeLettersArgs {
-  letters: Letter[]
+  letters: Letter[],
+  isExchanging: boolean
 }
 
 export type GameType = 'local' | 'online' | '';
