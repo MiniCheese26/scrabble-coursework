@@ -24,6 +24,9 @@ export default function Index(): JSX.Element {
   console.log("------------------------");
 
   const [shouldInitSocket, setShouldInitSocket] = useState(true);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [shouldReconnect, setShouldReconnect] = useState(false);
+  const [shouldReSync, setShouldReSync] = useState(false);
   const [grid, setGrid] = useState<GameGridElement<GameGridItem>[]>([]);
   const [loadingState, setLoadingState] = useState<IndexStates>("notLoading");
   const [activeErrors, setActiveErrors] = useState<string[]>([]);
@@ -59,12 +62,114 @@ export default function Index(): JSX.Element {
     if (targetPlayerIndex !== -1) {
       currentGameData.current.Players[targetPlayerIndex] = parsedData;
     }
-  }
+  };
+
+  const onLocalGameCreated = (argumentsParsed: {
+    grid: GameGridElement<GameGridItem>[],
+    gameId: string,
+    players: SharedPlayer[],
+    currentPlayer: string
+  }) => {
+    setGrid(argumentsParsed.grid);
+
+    currentGameData.current.CurrentGame = {
+      active: true,
+      id: {gameId: argumentsParsed.gameId, socketId: argumentsParsed.players[0].playerId},
+      type: "local"
+    };
+
+    currentGameData.current.Players = argumentsParsed.players;
+    setLoadingState("notLoading");
+    setUpdateComponentData(true);
+  };
+
+  const onGridStateUpdated = (argumentsParsed: {
+    grid: GameGridElement<GameGridItem>[]
+  }) => {
+    setGrid(argumentsParsed.grid);
+    setUpdateComponentData(true);
+  };
+
+  const onUpdatePlayer = (argumentsParsed: {
+    player: SharedPlayer
+  }) => {
+    updatePlayer(argumentsParsed.player);
+
+    setUpdateComponentData(true);
+  };
+
+  const onUpdatePlayers = (argumentsParsed: {
+    players: SharedPlayer[]
+  }) => {
+    for (const player of argumentsParsed.players) {
+      updatePlayer(player);
+    }
+
+    setUpdateComponentData(true);
+  };
+
+  const onEndTurn = (argumentsParsed: {
+    currentPlayer: string,
+    errors: string[]
+  }) => {
+    currentGameData.current.CurrentGame.id.socketId = argumentsParsed.currentPlayer;
+
+    setActiveErrors(argumentsParsed.errors);
+
+    setUpdateComponentData(true);
+  };
+
+  const onGameCanEnd = () => {
+    if (hasNotAnnouncedOutOfLetters.current) {
+      hasNotAnnouncedOutOfLetters.current = false;
+      alert("You are now out of new letters, the game will end when no more words can be made");
+    }
+  };
+
+  const onGameEnded = () => {
+    setGameIsOver(true);
+    setUpdateComponentData(true);
+  };
+
+  const onReconnectedAck = (argumentsParsed: {
+    success: boolean
+  }) => {
+    console.log(`reconnection ACK - ${argumentsParsed.success}`)
+
+    if (!argumentsParsed.success) {
+      socket.current?.close();
+    } else {
+      setShouldReSync(true);
+    }
+
+    setUpdateComponentData(true);
+  };
+
+  const onState = (argumentsParsed: {
+    grid: GameGridElement<GameGridItem>[],
+    gameOver: boolean,
+    allLettersUsed: boolean,
+    players: SharedPlayer[],
+    currentPlayer: string
+  }) => {
+    onGridStateUpdated({grid: argumentsParsed.grid});
+    onUpdatePlayers({players: argumentsParsed.players});
+    currentGameData.current.CurrentGame.id.socketId = argumentsParsed.currentPlayer;
+
+    if (argumentsParsed.allLettersUsed) {
+      onGameEnded();
+    }
+
+    if (argumentsParsed.gameOver) {
+      onGameEnded();
+    }
+  };
 
   if (shouldInitSocket) {
     socket.current = new w3cwebsocket("ws://localhost:8080/ws");
 
     socket.current.onopen = () => {
+      setIsSocketConnected(true);
       console.log("Connected to socket");
 
       setLoadingState("notLoading");
@@ -81,68 +186,67 @@ export default function Index(): JSX.Element {
               currentPlayer: string
             };
 
-            setGrid(argumentsParsed.grid);
-
-            currentGameData.current.CurrentGame = {
-              active: true,
-              id: {gameId: argumentsParsed.gameId, socketId: argumentsParsed.players[0].playerId},
-              type: "local"
-            };
-
-            currentGameData.current.Players = argumentsParsed.players;
-            setLoadingState("notLoading");
-            setUpdateComponentData(true);
+            onLocalGameCreated(argumentsParsed);
           } else if (messageParsed.method === "gridStateUpdated") {
             const argumentsParsed = messageParsed.arguments as {
               grid: GameGridElement<GameGridItem>[]
             };
 
-            setGrid(argumentsParsed.grid);
-            setUpdateComponentData(true);
+            onGridStateUpdated(argumentsParsed);
           } else if (messageParsed.method === "updatePlayer") {
-            const k = messageParsed.arguments as {
+            const argumentsParsed = messageParsed.arguments as {
               player: SharedPlayer
             };
 
-            updatePlayer(k.player);
-
-            setUpdateComponentData(true);
+            onUpdatePlayer(argumentsParsed);
           } else if (messageParsed.method === "updatePlayers") {
             const argumentsParsed = messageParsed.arguments as {
               players: SharedPlayer[]
             };
 
-            for (const player of argumentsParsed.players) {
-              updatePlayer(player);
-            }
-
-            setUpdateComponentData(true);
+            onUpdatePlayers(argumentsParsed);
           } else if (messageParsed.method === "endTurn") {
             const argumentsParsed = messageParsed.arguments as {
               currentPlayer: string,
               errors: string[]
             };
 
-            currentGameData.current.CurrentGame.id.socketId = argumentsParsed.currentPlayer;
-
-            setActiveErrors(argumentsParsed.errors);
-
-            setUpdateComponentData(true);
+            onEndTurn(argumentsParsed);
           } else if (messageParsed.method === "gameCanEnd") {
-            if (hasNotAnnouncedOutOfLetters.current) {
-              hasNotAnnouncedOutOfLetters.current = false;
-              alert("You are now out of new letters, the game will end when no more words can be made");
-            }
+            onGameCanEnd()
           } else if (messageParsed.method === "gameEnded") {
-            setGameIsOver(true);
-            setUpdateComponentData(true);
+            onGameEnded();
+          } else if (messageParsed.method === "reconnectedAck") {
+            const argumentsParsed = messageParsed.arguments as {
+              success: boolean
+            };
+
+            onReconnectedAck(argumentsParsed);
+          } else if (messageParsed.method === "state") {
+            const argumentsParsed = messageParsed.arguments as {
+              grid: GameGridElement<GameGridItem>[],
+              gameOver: boolean,
+              allLettersUsed: boolean,
+              players: SharedPlayer[],
+              currentPlayer: string
+            };
+
+            onState(argumentsParsed);
           }
         }
       }
     };
 
-    socket!.current.onclose = () => {
-      console.log("Disconnected from socket");
+    socket!.current.onclose = (event) => {
+      console.log("Disconnected from socket", event);
+      setIsSocketConnected(false);
+      setShouldReconnect(true);
+      setUpdateComponentData(true);
+      setShouldInitSocket(true);
+    }
+
+    socket!.current.onerror = (err) => {
+      console.log("Error", err);
     }
 
     setShouldInitSocket(false);
@@ -151,12 +255,36 @@ export default function Index(): JSX.Element {
   const send = (data: IWebsocketMethod) => {
     data.arguments = {...data.arguments, ...{id: currentGameData.current.CurrentGame.id}};
 
-    if (socket.current !== null) {
+    if (socket.current && isSocketConnected) {
       socket.current.send(JSON.stringify(data));
     }
   }
 
+  if (isSocketConnected && shouldReconnect) {
+    setShouldReconnect(false);
+    console.log("sending reconnection request");
+    setTimeout(() => {
+      send({
+        method: "reconnected",
+        arguments: {}
+      });
+    }, 1000);
+  }
+
+  if (isSocketConnected && shouldReSync) {
+    console.log("resyncing");
+    setShouldReSync(false);
+    setTimeout(() => {
+      send({
+        method: "syncState",
+        arguments: {}
+      });
+    }, 1000);
+  }
+
   const createLocalGame = (players: LocalPlayer[]) => {
+    currentGameData.current.CurrentGame.id.socketId = players[0].id;
+
     send({
       method: "createLocalGame",
       arguments: {
@@ -264,6 +392,10 @@ export default function Index(): JSX.Element {
       }
 
       setErrors(<Errors errors={activeErrors}/>);
+
+      if (shouldReconnect && !isSocketConnected) {
+        setGame(<p>Reconnecting...</p>)
+      }
     }
 
     setUpdateComponentData(false);

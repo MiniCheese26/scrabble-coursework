@@ -2,7 +2,7 @@ import {
   GameSocketIdentification,
   PlaceLetterArgs,
   RemoveBoardLetterArgs,
-  WebsocketMethods, RemovePlayerLettersArgs, SocketArgs, EndTurnArgs, CreateLocalGameArgs,
+  WebsocketMethods, RemovePlayerLettersArgs, SocketArgs, SocketGameTypeArgs, CreateLocalGameArgs,
 } from 'SharedTypes/sharedTypes';
 import {nanoid} from 'nanoid';
 import {GameState} from "./gameState";
@@ -89,15 +89,19 @@ class WebsocketRoom {
   }
 
   emitToRoom(method: WebsocketMethods, args?: object) {
-    const r = new WebsocketMethod(method, args ?? {}).getJsonString();
+    const websocketMethod = new WebsocketMethod(method, args ?? {}).getJsonString();
 
     for (const connection of this._connections) {
-      connection.connection.send(r);
+      connection.connection.send(websocketMethod);
     }
   }
 
   getWebsocketConnectionByConnection(connection: WebSocket): WebsocketRoomConnection | undefined {
     return this.connections.find(x => x.connection === connection);
+  }
+
+  getWebsocketConnectionBySocketId(socketId: string): WebsocketRoomConnection | undefined {
+    return this.connections.find(x => x.socketId === socketId);
   }
 }
 
@@ -129,7 +133,7 @@ class WebsocketRooms {
 
 const rooms = new WebsocketRooms();
 
-function defineWebsocketMethod<T extends object>(message: IWebsocketMethod, method: WebsocketMethods, cb: (args: T) => void) {
+function defineWebsocketMethod<T extends SocketArgs>(message: IWebsocketMethod, method: WebsocketMethods, cb: (args: T) => void) {
   if (message.method === method) {
     const messageArguments = message.arguments as T;
 
@@ -138,6 +142,8 @@ function defineWebsocketMethod<T extends object>(message: IWebsocketMethod, meth
 }
 
 const gameStates = new GameStates();
+
+//let socketsLost: WebSocket[] = [];
 
 export function initialiseSocket(ws: Server) {
   ws.on("connection", (connection) => {
@@ -225,7 +231,7 @@ export function initialiseSocket(ws: Server) {
           connection.send(response);
         });
 
-        defineWebsocketMethod<EndTurnArgs>(messageParsed, "endTurn", (args) => {
+        defineWebsocketMethod<SocketGameTypeArgs>(messageParsed, "endTurn", (args) => {
           (async () => {
             const gameState = gameStates.states[args.id.gameId];
 
@@ -269,32 +275,93 @@ export function initialiseSocket(ws: Server) {
             }
           })();
         });
+
+        defineWebsocketMethod<SocketArgs>(messageParsed, "reconnected", (args) => {
+          const room = rooms.getRoom(args.id.gameId);
+
+          if (room) {
+            //const oldConnection = room.getWebsocketConnectionBySocketId(args.id.socketId);
+
+            room.leave(args.id.socketId);
+            room.join({
+              connection,
+              socketId: args.id.socketId
+            });
+
+            //socketsLost = socketsLost.filter(x => x !== oldConnection.connection);
+
+            const response = new WebsocketMethod("reconnectedAck", {
+              success: true
+            }).getJsonString();
+
+            connection.send(response);
+            return;
+          }
+
+          const response = new WebsocketMethod("reconnectedAck", {
+            success: false
+          }).getJsonString();
+
+          connection.send(response);
+        });
+
+        defineWebsocketMethod<SocketGameTypeArgs>(messageParsed, "syncState", (args) => {
+          const gameState = gameStates.states[args.id.gameId];
+
+          const state = gameState.syncState();
+
+          if (args.type === "local") {
+            const response = new WebsocketMethod("state", {
+              grid: state.grid,
+              gameOver: state.gameOver,
+              allLettersUsed: state.allLettersUsed,
+              players: [...state.players.map(x => x.getJsonObject())],
+              currentPlayer: state.currentPlayer
+            }).getJsonString();
+
+            connection.send(response);
+          } else {
+            const response = new WebsocketMethod("state", {
+              grid: state.grid,
+              gameOver: state.gameOver,
+              allLettersUsed: state.allLettersUsed,
+              players: [...state.players.map(x => x.getJsonObject())],
+              currentPlayer: state.currentPlayer
+            }).getJsonString();
+
+            connection.send(response);
+          }
+        });
       }
     });
     connection.on("close", (code, reason) => {
-      console.log("code", code);
-      console.log("reason", reason);
+      //console.log("code", code);
+      //console.log("reason", reason);
 
-      if (code === 1001 || code === 1006) {
-        const l = rooms.getRoomByConnection(connection);
+      /*if (code === 1001 || code === 1006 || code === 1005) {
+        console.log("pushing connection");
+        socketsLost.push(connection);
+        setTimeout(() => {
+          if (socketsLost.includes(connection)) {
+            console.log("includes");
+            const l = rooms.getRoomByConnection(connection);
 
-        if (l !== undefined) {
-          const c = l.getWebsocketConnectionByConnection(connection);
-          l.leave(c.socketId);
-          const g = gameStates.states[l.gameId];
-          gameStates.deleteGameState(g);
+            if (l !== undefined) {
+              const c = l.getWebsocketConnectionByConnection(connection);
+              l.leave(c.socketId);
+              const g = gameStates.states[l.gameId];
+              gameStates.deleteGameState(g);
 
-          if (l.connections.length === 0) {
-            rooms.deleteRoom(l.roomId);
+              if (l.connections.length === 0) {
+                rooms.deleteRoom(l.roomId);
+              }
+
+              connection.terminate();
+            }
           }
-
-          connection.terminate();
-        }
-
-        const a = 1;
-
-      } else {
-      }
+          console.log("no includes");
+        }, 30000);
+      }*/
     });
   });
 }

@@ -9,7 +9,7 @@ export const Container = styled.section`
   justify-content: space-evenly;
   height: 100%;
   color: #4E4D5C;
-  min-height: 750px;
+  min-height: 500px;
   min-width: 860px;
 `;
 

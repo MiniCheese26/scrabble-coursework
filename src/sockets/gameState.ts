@@ -46,6 +46,7 @@ export class GameState {
   private _inviteCode!: string;
   private _letterCount: number;
   private _turnIndex: number;
+  private _wordsPlaced: number;
   private _lettersPlacedInTurn: number[];
   private _errors: string[];
   private _endOfGameManager: EndOfGameManager;
@@ -58,6 +59,7 @@ export class GameState {
     this._letterBag = new LetterBag();
     this._letterCount = 0;
     this._turnIndex = 0;
+    this._wordsPlaced = 0;
     this._lettersPlacedInTurn = [];
     this._errors = [];
     this._endOfGameManager = new EndOfGameManager();
@@ -257,7 +259,9 @@ export class GameState {
       return -1;
     }
 
-    if (!isValidPlacement && this._turnIndex !== 0) {
+    const isExtendingAnExistingWord = !word.every(x => x.gridItem.turnIndex === word[0].gridItem.turnIndex);
+
+    if (!isValidPlacement && this._turnIndex !== 0 && !isExtendingAnExistingWord) {
       this._errors.push(`Invalid placement of ${wordJoined.toLowerCase()}`);
       return -1;
     }
@@ -280,6 +284,11 @@ export class GameState {
       }
 
       wordsProcessed.push(targetWordId);
+      this._wordsPlaced++;
+    }
+    else if (targetWord.length === 1 && !targetWord.some(x => this._validateLetterIsNotIsolated(targetWord, x))) {
+      const targetWordJoined = targetWord.map(x => x.gridItem.letter).join("");
+      this._errors.push(`Invalid placement of ${targetWordJoined.toLowerCase()}`);
     }
   }
 
@@ -321,6 +330,8 @@ export class GameState {
     await this._processPlacedLetters();
 
     if (this._errors.length > 0) {
+      // dedupe errors due to issues such as single letter incorrect placements being logged twice
+      this._errors = [...new Set(this._errors)];
       this._resetTurn();
       return this._errors;
     }

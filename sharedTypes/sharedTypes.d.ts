@@ -40,7 +40,7 @@ export interface RemovePlayerLettersArgs extends SocketArgs {
   letters: Letter[]
 }
 
-export interface EndTurnArgs extends SocketArgs {
+export interface SocketGameTypeArgs extends SocketArgs {
   type: GameType
 }
 
@@ -106,7 +106,11 @@ export type WebsocketMethods =
   | "removePlayerLetters"
   | "givePlayerLetters"
   | "gameCanEnd"
-  | "gameEnded";
+  | "gameEnded"
+  | "reconnected"
+  | "reconnectedAck"
+  | "syncState"
+  | "state";
 
 export interface IWebsocketMethod {
   method: WebsocketMethods,
