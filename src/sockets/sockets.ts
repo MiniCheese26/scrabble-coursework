@@ -96,6 +96,10 @@ class WebsocketRoom {
     }
   }
 
+  hasSocketId(socketId: string) {
+    return this.connections.some(x => x.socketId === socketId);
+  }
+
   getWebsocketConnectionByConnection(connection: WebSocket): WebsocketRoomConnection | undefined {
     return this.connections.find(x => x.connection === connection);
   }
@@ -143,7 +147,7 @@ function defineWebsocketMethod<T extends SocketArgs>(message: IWebsocketMethod, 
 
 const gameStates = new GameStates();
 
-//let socketsLost: WebSocket[] = [];
+let socketsLost: WebSocket[] = [];
 
 export function initialiseSocket(ws: Server) {
   ws.on("connection", (connection) => {
@@ -219,7 +223,7 @@ export function initialiseSocket(ws: Server) {
           connection.send(response);
         });
 
-        defineWebsocketMethod<SocketArgs>(messageParsed, "givePlayerLetters", (args) => {
+        defineWebsocketMethod(messageParsed, "givePlayerLetters", (args) => {
           const gameState = gameStates.states[args.id.gameId];
 
           const state = gameState.givePlayerLetters(args.id.socketId).syncState();
@@ -276,33 +280,34 @@ export function initialiseSocket(ws: Server) {
           })();
         });
 
-        defineWebsocketMethod<SocketArgs>(messageParsed, "reconnected", (args) => {
+        defineWebsocketMethod(messageParsed, "reconnected", (args) => {
           const room = rooms.getRoom(args.id.gameId);
 
           if (room) {
-            //const oldConnection = room.getWebsocketConnectionBySocketId(args.id.socketId);
+            const oldConnection = room.getWebsocketConnectionBySocketId(args.id.socketId);
 
-            room.leave(args.id.socketId);
-            room.join({
-              connection,
-              socketId: args.id.socketId
-            });
+            if (room.hasSocketId(args.id.socketId)) {
+              room.leave(args.id.socketId);
+              room.join({
+                connection,
+                socketId: args.id.socketId
+              });
 
-            //socketsLost = socketsLost.filter(x => x !== oldConnection.connection);
+              socketsLost = socketsLost.filter(x => x !== oldConnection.connection);
 
+              const response = new WebsocketMethod("reconnectedAck", {
+                success: true
+              }).getJsonString();
+
+              connection.send(response);
+            }
+          } else {
             const response = new WebsocketMethod("reconnectedAck", {
-              success: true
+              success: false
             }).getJsonString();
 
             connection.send(response);
-            return;
           }
-
-          const response = new WebsocketMethod("reconnectedAck", {
-            success: false
-          }).getJsonString();
-
-          connection.send(response);
         });
 
         defineWebsocketMethod<SocketGameTypeArgs>(messageParsed, "syncState", (args) => {
@@ -311,7 +316,7 @@ export function initialiseSocket(ws: Server) {
           const state = gameState.syncState();
 
           if (args.type === "local") {
-            const response = new WebsocketMethod("state", {
+            const response = new WebsocketMethod("syncState", {
               grid: state.grid,
               gameOver: state.gameOver,
               allLettersUsed: state.allLettersUsed,
@@ -321,7 +326,7 @@ export function initialiseSocket(ws: Server) {
 
             connection.send(response);
           } else {
-            const response = new WebsocketMethod("state", {
+            const response = new WebsocketMethod("syncState", {
               grid: state.grid,
               gameOver: state.gameOver,
               allLettersUsed: state.allLettersUsed,
@@ -332,16 +337,47 @@ export function initialiseSocket(ws: Server) {
             connection.send(response);
           }
         });
+
+        defineWebsocketMethod(messageParsed, "leaveGame", (args) => {
+          const gameState = gameStates.states[args.id.gameId];
+
+          const o = gameState.getPlayer(args.id.socketId);
+
+          gameState.kickPlayer(args.id.socketId);
+          const r = rooms.getRoomByConnection(connection);
+          r.leave(args.id.socketId);
+
+          if (r.connections.length === 0) {
+            gameStates.deleteGameState(gameState);
+            rooms.deleteRoom(r.roomId);
+          } else {
+            r.emitToRoom("playerLeft", {
+              playerName: o.name
+            });
+
+            const state = gameState.syncState();
+
+            //TODO the if online or local thing
+            r.emitToRoom("syncState", {
+              grid: state.grid,
+              gameOver: state.gameOver,
+              allLettersUsed: state.allLettersUsed,
+              players: [...state.players.map(x => x.getJsonObject())],
+              currentPlayer: state.currentPlayer
+            });
+          }
+        });
       }
     });
-    connection.on("close", (code, reason) => {
+    connection.on("close", (code) => {
       //console.log("code", code);
       //console.log("reason", reason);
 
-      /*if (code === 1001 || code === 1006 || code === 1005) {
+      if (code === 1001 || code === 1006 || code === 1005) {
         console.log("pushing connection");
         socketsLost.push(connection);
         setTimeout(() => {
+          console.log("running");
           if (socketsLost.includes(connection)) {
             console.log("includes");
             const l = rooms.getRoomByConnection(connection);
@@ -350,10 +386,28 @@ export function initialiseSocket(ws: Server) {
               const c = l.getWebsocketConnectionByConnection(connection);
               l.leave(c.socketId);
               const g = gameStates.states[l.gameId];
-              gameStates.deleteGameState(g);
+              // might need shallow clone
+              const p = g.getPlayer(c.socketId);
+              g.kickPlayer(c.socketId);
 
               if (l.connections.length === 0) {
+                gameStates.deleteGameState(g);
                 rooms.deleteRoom(l.roomId);
+              } else {
+                l.emitToRoom("playerLeft", {
+                  playerName: p.name
+                });
+
+                const state = g.syncState();
+
+                //TODO the if online or local thing
+                l.emitToRoom("syncState", {
+                  grid: state.grid,
+                  gameOver: state.gameOver,
+                  allLettersUsed: state.allLettersUsed,
+                  players: [...state.players.map(x => x.getJsonObject())],
+                  currentPlayer: state.currentPlayer
+                });
               }
 
               connection.terminate();
@@ -361,7 +415,7 @@ export function initialiseSocket(ws: Server) {
           }
           console.log("no includes");
         }, 30000);
-      }*/
+      }
     });
   });
 }

@@ -111,7 +111,7 @@ export class GameState {
     return this._gameId;
   }
 
-  private _getPlayer(playerId: string): Player | undefined {
+  getPlayer(playerId: string): Player | undefined {
     return this._players.find(x => x.playerId === playerId);
   }
 
@@ -124,7 +124,7 @@ export class GameState {
       return false;
     }
 
-    const targetPlayer = this._getPlayer(playerId);
+    const targetPlayer = this.getPlayer(playerId);
 
     if (!targetPlayer) {
       return false;
@@ -151,6 +151,23 @@ export class GameState {
     }
 
     return targetIndex.gridItem.empty;
+  }
+
+  kickPlayer(playerId: string) {
+    const targetPlayer = this.getPlayer(playerId);
+
+    const playerLetters: Letter[] = targetPlayer.letters.letters.map(x => {
+      return {letter: x.letter, value: x.value};
+    });
+
+    this.removePlayerLetters(playerId, ...playerLetters);
+
+    if (this._getCurrentPlayer().playerId === playerId) {
+      this._resetTurn();
+      this._currentPlayer.nextPlayer();
+    }
+
+    this._players = this._players.filter(x => x.playerId === playerId);
   }
 
   placeLetter(gridIndex: number, playerId: string, value: Letter, oldGridIndex?: number): GameState {
@@ -285,8 +302,7 @@ export class GameState {
 
       wordsProcessed.push(targetWordId);
       this._wordsPlaced++;
-    }
-    else if (targetWord.length === 1 && !targetWord.some(x => this._validateLetterIsNotIsolated(targetWord, x))) {
+    } else if (targetWord.length === 1 && !targetWord.some(x => this._validateLetterIsNotIsolated(targetWord, x))) {
       const targetWordJoined = targetWord.map(x => x.gridItem.letter).join("");
       this._errors.push(`Invalid placement of ${targetWordJoined.toLowerCase()}`);
     }

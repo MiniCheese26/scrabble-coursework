@@ -110,7 +110,8 @@ export type WebsocketMethods =
   | "reconnected"
   | "reconnectedAck"
   | "syncState"
-  | "state";
+  | "playerLeft"
+  | "leaveGame";
 
 export interface IWebsocketMethod {
   method: WebsocketMethods,

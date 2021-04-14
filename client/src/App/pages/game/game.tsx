@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {GameWrapper} from 'Styles/game/game/styles';
 import {GameProps} from 'Types/game';
 import GridItem from 'Components/gridItem';
@@ -8,6 +8,13 @@ export default function Game(props: GameProps): React.ReactElement {
   const gridItems = props.grid.map(
     x => <GridItem key={x.index} gridItem={x.gridItem} index={x.index} gameOperations={props.socketOperations}/>,
   );
+
+  useEffect(() => {
+    return function cleanup() {
+      //console.log("cleaning up");
+      //props.socketOperations.leaveGame();
+    };
+  });
 
   return (
     <>

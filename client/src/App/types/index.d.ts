@@ -15,7 +15,8 @@ export type GameOperations = {
   placeLetter(args: PlaceLetterArgs): void,
   removeBoardLetter(args: RemoveBoardLetterArgs): void,
   endTurn(): void,
-  exchangeLetters(args: ExchangeLettersArgs): void
+  exchangeLetters(args: ExchangeLettersArgs): void,
+  leaveGame(): void
 }
 
 export type SocketOperations = {

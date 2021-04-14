@@ -24,7 +24,7 @@ export default function Index(): JSX.Element {
   console.log("------------------------");
 
   const [shouldInitSocket, setShouldInitSocket] = useState(true);
-  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [socketIsConnected, setSocketIsConnected] = useState(false);
   const [shouldReconnect, setShouldReconnect] = useState(false);
   const [shouldReSync, setShouldReSync] = useState(false);
   const [grid, setGrid] = useState<GameGridElement<GameGridItem>[]>([]);
@@ -55,6 +55,8 @@ export default function Index(): JSX.Element {
   const socket: MutableRefObject<w3cwebsocket | null> = useRef(null);
 
   const hasNotAnnouncedOutOfLetters: MutableRefObject<boolean> = useRef(true);
+
+  const o = useRef(true);
 
   const updatePlayer = (parsedData: SharedPlayer) => {
     const targetPlayerIndex = currentGameData.current.Players.findIndex(x => x.playerId === parsedData.playerId);
@@ -137,7 +139,9 @@ export default function Index(): JSX.Element {
     console.log(`reconnection ACK - ${argumentsParsed.success}`)
 
     if (!argumentsParsed.success) {
-      socket.current?.close();
+      if (currentGameData.current.CurrentGame.active) {
+        socket.current?.close();
+      }
     } else {
       setShouldReSync(true);
     }
@@ -145,7 +149,7 @@ export default function Index(): JSX.Element {
     setUpdateComponentData(true);
   };
 
-  const onState = (argumentsParsed: {
+  const onSyncState = (argumentsParsed: {
     grid: GameGridElement<GameGridItem>[],
     gameOver: boolean,
     allLettersUsed: boolean,
@@ -165,11 +169,16 @@ export default function Index(): JSX.Element {
     }
   };
 
+  const onPlayerLeft = (argumentsParsed: {
+    playerName: string
+  }) => {
+    alert(`Player ${argumentsParsed.playerName} left`);
+  };
+
   if (shouldInitSocket) {
-    socket.current = new w3cwebsocket("ws://localhost:8080/ws");
+    socket.current = new w3cwebsocket("wss://loc0ded.com/scrabble/ws");
 
     socket.current.onopen = () => {
-      setIsSocketConnected(true);
       console.log("Connected to socket");
 
       setLoadingState("notLoading");
@@ -222,7 +231,7 @@ export default function Index(): JSX.Element {
             };
 
             onReconnectedAck(argumentsParsed);
-          } else if (messageParsed.method === "state") {
+          } else if (messageParsed.method === "syncState") {
             const argumentsParsed = messageParsed.arguments as {
               grid: GameGridElement<GameGridItem>[],
               gameOver: boolean,
@@ -231,36 +240,53 @@ export default function Index(): JSX.Element {
               currentPlayer: string
             };
 
-            onState(argumentsParsed);
+            onSyncState(argumentsParsed);
+          } else if (messageParsed.method === "playerLeft") {
+            const argumentsParsed = messageParsed.arguments as {
+              playerName: string
+            };
+
+            onPlayerLeft(argumentsParsed);
           }
         }
       }
+
+      setSocketIsConnected(true);
     };
 
     socket!.current.onclose = (event) => {
       console.log("Disconnected from socket", event);
-      setIsSocketConnected(false);
+      setSocketIsConnected(false);
       setShouldReconnect(true);
       setUpdateComponentData(true);
       setShouldInitSocket(true);
-    }
+    };
 
     socket!.current.onerror = (err) => {
       console.log("Error", err);
-    }
+    };
 
     setShouldInitSocket(false);
+  }
+
+  if (o.current) {
+    o.current = false;
+
+    setTimeout(() => {
+      console.log("killing");
+      socket!.current?.close();
+    }, 10000);
   }
 
   const send = (data: IWebsocketMethod) => {
     data.arguments = {...data.arguments, ...{id: currentGameData.current.CurrentGame.id}};
 
-    if (socket.current && isSocketConnected) {
+    if (socket.current && socketIsConnected) {
       socket.current.send(JSON.stringify(data));
     }
   }
 
-  if (isSocketConnected && shouldReconnect) {
+  if (socketIsConnected && shouldReconnect) {
     setShouldReconnect(false);
     console.log("sending reconnection request");
     setTimeout(() => {
@@ -271,7 +297,7 @@ export default function Index(): JSX.Element {
     }, 1000);
   }
 
-  if (isSocketConnected && shouldReSync) {
+  if (socketIsConnected && shouldReSync) {
     console.log("resyncing");
     setShouldReSync(false);
     setTimeout(() => {
@@ -344,6 +370,13 @@ export default function Index(): JSX.Element {
     }
   };
 
+  const leaveGame = () => {
+    send({
+      method: "leaveGame",
+      arguments: {}
+    });
+  };
+
   const socketOperations: SocketOperations = {
     initOperations: {
       createLocalGame
@@ -352,7 +385,8 @@ export default function Index(): JSX.Element {
       placeLetter,
       removeBoardLetter,
       endTurn,
-      exchangeLetters
+      exchangeLetters,
+      leaveGame
     }
   };
 
@@ -393,7 +427,7 @@ export default function Index(): JSX.Element {
 
       setErrors(<Errors errors={activeErrors}/>);
 
-      if (shouldReconnect && !isSocketConnected) {
+      if (shouldReconnect && !socketIsConnected) {
         setGame(<p>Reconnecting...</p>)
       }
     }
