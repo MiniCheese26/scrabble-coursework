@@ -1,6 +1,6 @@
-import {css} from "styled-components";
+import styled, {css} from 'styled-components';
 
-export const GameButton = css`
+export const GameButtonCss = css`
   font-weight: 500;
   padding: 1.5rem;
   font-size: 1.4rem;
@@ -11,3 +11,7 @@ export const GameButton = css`
   text-decoration: none;
   text-align: center;
 `;
+
+export const GameButton = styled.div`
+  ${GameButtonCss}
+  `;

@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
 export const Header = styled.header`
   flex: 1;
@@ -25,20 +25,11 @@ export const HeaderMenuOuter = styled(HeaderEdgeItem)`
   }
 `;
 
-export const HeaderCreditsOuter = styled(HeaderEdgeItem)`
-  justify-content: flex-end;
-  border-left: 0.5rem solid #FAFAFA;
-  
-  & h1 {
-    padding-right: 1rem;
-  }
-`;
-
 export const HeaderTitle = styled(HeaderItem)`
   font-weight: 300;
   flex-grow: 6;
   text-align: center;
-
+  
   & a {
     font-size: 5rem;
     text-decoration: none;

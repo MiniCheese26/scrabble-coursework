@@ -1,22 +1,17 @@
-import React, {useState} from "react";
-import {InputOption} from "Styles/game/styles";
-import {JoinButton} from "Styles/game/join/styles";
+import React, {useState} from 'react';
+import { InputOption } from 'Styles/layout/inputOption';
+import { SubmitButtonLink } from 'Styles/layout/submitButton';
 
 export default function Join(): JSX.Element {
-    const [code, setCode] = useState("");
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCode(e.target.value);
-    }
-
-    const handleSubmit = (e: React.MouseEvent<HTMLAnchorElement>) => {
-        e.preventDefault();
-    }
+    const [lobbyId, setLobbyId] = useState('');
 
     return (
         <>
-            <InputOption placeholder="Game Code" maxLength={4} onChange={handleChange}/>
-            <JoinButton to="/joinGame" onClick={handleSubmit}>Join</JoinButton>
+            <InputOption onChange={(e) => setLobbyId(e.target.value)} placeholder='Game Code' maxLength={8}/>
+            <SubmitButtonLink to={{
+                pathname: '/joiningGame',
+                state: lobbyId
+            }}>Join</SubmitButtonLink>
         </>
-    )
+    );
 }

@@ -1,27 +1,41 @@
-import {Route, Switch, useLocation} from "react-router-dom";
-import {MainSection as MainSectionStyles} from "Styles/index/styles";
-import UiNavigation from "Components/uiNavigation";
-import React from "react";
-import {InitOperations} from "Types/index";
+import {Route, Switch, useLocation} from 'react-router-dom';
+import UiNavigation from 'Components/uiNavigation';
+import React from 'react';
+import Game from 'Pages/game/game';
+import {BothSocketProps} from 'Types/props';
+import styled from 'styled-components';
+import {Panel} from 'Styles/layout/panel';
 
-export type MainSectionProps = {
-  game: React.ReactElement,
-  initOperations: InitOperations
-};
+const MainSectionStyle = styled(Panel)`
+  flex: 4 1 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 0.5rem;
+  max-width: 75%;
 
-export default function MainSection(props: MainSectionProps) {
+  & a:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+  
+  @media (min-width: 992px) {
+    max-width: 80%;
+  }
+`;
+
+export default function MainSection(props: BothSocketProps) {
   const location = useLocation();
 
   return (
-    <MainSectionStyles>
+    <MainSectionStyle>
       <Switch location={location}>
-        <Route exact path="/game">
-          {props.game}
+        <Route exact path='/game'>
+          <Game socketOperations={props.socketOperations} localStateChangeEmitter={props.localStateChangeEmitter}/>
         </Route>
         <Route>
-          <UiNavigation initOperations={props.initOperations}/>
+          <UiNavigation socketOperations={props.socketOperations} localStateChangeEmitter={props.localStateChangeEmitter}/>
         </Route>
       </Switch>
-    </MainSectionStyles>
+    </MainSectionStyle>
   );
 }

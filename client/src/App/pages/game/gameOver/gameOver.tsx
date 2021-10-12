@@ -1,11 +1,50 @@
-import React from "react";
-import {SharedPlayer} from "Types/sharedTypes";
-import {GameOverBox, GameOverRow, GameOverText, GameOverWinner, GameOverWrapper} from "Styles/components/gameOver/styles";
-import {BankOptionLink} from "Styles/index/styles";
+import React from 'react';
+import {GameOverProps} from 'Types/props';
+import styled from 'styled-components';
+import { BankOptionLink } from 'Styles/layout/back';
 
-type GameOverProps = {
-  players: SharedPlayer[];
-}
+const GameOverWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid black;
+  background: white;
+  margin: auto;
+`;
+
+const GameOverRow = styled.div`
+  flex: 1;
+  display: flex;
+  padding: 0.4rem;
+  border-bottom: 1px solid black;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+
+  &:nth-last-child {
+    border-bottom: unset;
+  }
+`;
+
+const GameOverBox = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: black;
+
+  &:first-child:not(:only-child) {
+    border-right: 1px solid black;
+  }
+`;
+
+const GameOverText = styled.p`
+  font-size: 18px;
+`;
+
+const GameOverWinner = styled.p`
+  font-size: 22px;
+`;
 
 export default function GameOver(props: GameOverProps) {
   const sortedPlayers = props.players.sort((a, b) => {
@@ -20,7 +59,7 @@ export default function GameOver(props: GameOverProps) {
 
   return (
     <>
-      <BankOptionLink to="/">Exit</BankOptionLink>
+      <BankOptionLink to='/'>Exit</BankOptionLink>
       <GameOverWrapper>
         <GameOverRow>
           <GameOverBox>

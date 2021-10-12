@@ -24,7 +24,16 @@
     "react/prop-types": "off",
     "import/no-unresolved": "error",
     "no-use-before-define": "off",
-    "@typescript-eslint/no-use-before-define": ["error"]
+    "@typescript-eslint/no-use-before-define": ["error"],
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-unsafe-assignment": "warn",
+    "@typescript-eslint/no-unsafe-call": "warn",
+    "react/jsx-key": "off",
+    "semi": "error",
+    "quotes": [2, "single"],
+    "camelcase": "error"
   },
   "settings": {
     "react": {

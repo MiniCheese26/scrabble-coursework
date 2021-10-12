@@ -1,4 +1,7 @@
-export type GamePlayerType = 'Human' | 'Ai' | 'Ignore' | 'Empty';
+import {ResponseArgs} from './responseArgs';
+import {SocketArgs} from './requestArgs';
+
+export type GamePlayerType = 'Human' | 'Ai' | 'Empty';
 
 export interface LocalPlayer {
   name: string;
@@ -11,41 +14,15 @@ export interface Letter {
   value: number
 }
 
-export interface PlaceLetterArgs {
-  targetIndex: number;
-  newData: Letter;
-  oldIndex?: number;
-}
-
-export interface GameSocketIdentification {
-  gameId: string;
+export interface SocketIdentification {
+  roomId: string;
+  playerId: string;
   socketId: string;
 }
 
 export interface Coordinate {
   x: number,
   y: number
-}
-
-export interface SocketArgs {
-  id?: GameSocketIdentification
-}
-
-export interface RemoveBoardLetterArgs extends SocketArgs {
-  index: number,
-  isBeingMoved: boolean
-}
-
-export interface RemovePlayerLettersArgs extends SocketArgs {
-  letters: Letter[]
-}
-
-export interface SocketGameTypeArgs extends SocketArgs {
-  type: GameType
-}
-
-export interface CreateLocalGameArgs extends SocketArgs {
-  localPlayers: LocalPlayer[]
 }
 
 export interface ExchangeLettersArgs {
@@ -60,7 +37,15 @@ export interface SharedPlayer {
   type: GamePlayerType,
   letters: LetterWithCount[],
   score: number,
-  name: string
+  name: string,
+  isClient: true
+}
+
+export interface SharedPlayerLimited {
+  score: number,
+  name: string,
+  playerId: string,
+  isClient: false
 }
 
 export interface LetterWithCount extends Letter {
@@ -94,26 +79,59 @@ export interface GameGridElement<T extends GameGridItem> {
   index: number
 }
 
-export type WebsocketMethods =
-  "createLocalGame"
-  | "placeLetter"
-  | "localGameCreated"
-  | "gridStateUpdated"
-  | "updatePlayer"
-  | "removeBoardLetter"
-  | "endTurn"
-  | "updatePlayers"
-  | "removePlayerLetters"
-  | "givePlayerLetters"
-  | "gameCanEnd"
-  | "gameEnded"
-  | "reconnected"
-  | "reconnectedAck"
-  | "syncState"
-  | "playerLeft"
-  | "leaveGame";
+export type WebsocketResponseMethods =
+  'localGameCreated'
+  | 'gridStateUpdated'
+  | 'playerUpdated'
+  | 'playersUpdated'
+  | 'gameCanEnd'
+  | 'gameEnded'
+  | 'reconnectedAck'
+  | 'playerLeft'
+  | 'onlineLobbyJoined'
+  | 'playerJoinedLobby'
+  | 'onlineGameCreated'
+  | 'playerLeftLobby'
+  | 'lobbyStatus'
+  | 'lobbyDataUpdated'
+  | 'kicked'
+  | 'endTurn'
+  | 'syncGameState'
+  | 'updateLobbyName'
+  | 'syncLobbyState';
 
-export interface IWebsocketMethod {
-  method: WebsocketMethods,
-  arguments: Object
+export type WebsocketRequestMethods =
+  'createLocalGame'
+  | 'placeLetter'
+  | 'removeBoardLetter'
+  | 'endTurn'
+  | 'removePlayerLetters'
+  | 'givePlayerLetters'
+  | 'reconnected'
+  | 'syncGameState'
+  | 'leaveGame'
+  | 'createOnlineLobby'
+  | 'createOnlineGame'
+  | 'joinOnlineLobby'
+  | 'leaveOnlineLobby'
+  | 'kickLobbyPlayer'
+  | 'updateLobbyName'
+  | 'checkLobbyStatus'
+  | 'syncLobbyState';
+
+export interface IWebsocketRequestMethod<T extends SocketArgs> {
+  method: WebsocketRequestMethods,
+  arguments: T
+}
+
+export interface IWebsocketResponseMethod<T> {
+  method: WebsocketResponseMethods,
+  arguments: ResponseArgs<T>
+}
+
+export interface LobbyStatus { canJoin: boolean, requiresPassword?: boolean, reason: string }
+
+export interface LobbyData {
+  players: LocalPlayer[],
+  lobbyId: string,
 }

@@ -1,11 +1,11 @@
-import React from "react";
-import {GameOption} from "Styles/game/styles";
+import React from 'react';
+import {UiButton} from 'Styles/layout/uiButton';
 
 export default function Create(): JSX.Element {
-    return (
-        <>
-            <GameOption to="/createOnline">Create Online Game</GameOption>
-            <GameOption to="/createLocal">Create Local Game</GameOption>
-        </>
-    );
+  return (
+    <>
+      <UiButton to='/createOnline'>Create Online Game</UiButton>
+      <UiButton to='/createLocal'>Create Local Game</UiButton>
+    </>
+  );
 }

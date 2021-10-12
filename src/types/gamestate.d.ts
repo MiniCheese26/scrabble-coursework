@@ -1,4 +1,4 @@
-import {EmptyGameGridItem, Letter, GameGridElement, GameGridItem} from "../../sharedTypes/sharedTypes";
+import {EmptyGameGridItem, Letter, GameGridElement, GameGridItem} from '@Types/sharedTypes';
 
 export type GameGridLayout<T extends GameGridItem> = {
   [x: number]: GameGridElement<T>

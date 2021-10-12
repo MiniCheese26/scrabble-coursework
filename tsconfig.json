@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "CommonJS",
     "target": "ESNext",
-    "rootDirs": [
+    "typeRoots": [
       "node_modules/@types",
       "src/types",
       "sharedTypes"
@@ -11,9 +11,29 @@
     "outDir": "build",
     "baseUrl": "./",
     "paths": {
-      "@/SharedTypes/*": ["sharedTypes"]
+      "@Types/*": [
+        "sharedTypes/*",
+        "src/types/*"
+      ],
+      "@Game/*": [
+        "src/game/*"
+      ],
+      "@Websocket/*": [
+        "src/game/websocket/*",
+      ]
     },
     "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "allowJs": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "noEmit": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true
   },
   "exclude": [
     "node_modules"

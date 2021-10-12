@@ -1,26 +1,58 @@
 import React from 'react';
-import {FreeGridItemElement, GridText, UsedGridItemElement} from 'Styles/components/gridItem/styles';
-import {GridItemProps} from 'Types/gridItem';
 import {useDrag, useDrop} from 'react-dnd';
-import {LetterDragItem} from 'Types/letterItem';
-import {Letter} from "Types/sharedTypes";
+import {GridItemProps} from 'Types/props';
+import {GridDragItem, LetterDragItem} from 'Types/types';
+import styled from 'styled-components';
 
-export type GridDragItem = {
-  index: number,
-  type: "gridLetter"
-} & Letter;
+const GridItemElement = styled.div`
+  text-align: center;
+  border: 1px solid black;
+  place-items: center;
+  padding: 0.2rem;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+`;
+
+const FreeGridItemElement = styled(GridItemElement)<{backgroundColour: string, textColour: string}>`
+  background: ${props => props.backgroundColour};
+  color: ${props => props.textColour};
+  grid-template-rows: repeat(2, 1fr);
+  grid-template-areas:
+          '. topText .'
+          '. bottomText .';
+`;
+
+const UsedGridItemElement = styled(GridItemElement)`
+  background: #E8DAB2;
+  color: black;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-areas:
+          '. . .'
+          '. letter .'
+          '. . value';
+`;
+
+const GridText = styled.p<{gridArea: string, fontSize?: number}>`
+  grid-area: ${props => props.gridArea};
+  font-size: ${props => props.fontSize || 1.0};
+`;
 
 export default function GridItem(props: GridItemProps): React.ReactElement {
-  const [, drop] = useDrop<LetterDragItem | GridDragItem, unknown, HTMLDivElement>({
+  const [,drop] = useDrop<LetterDragItem | GridDragItem, unknown, unknown>({
     accept: ['letter', 'gridLetter'],
     drop: (item) => {
       switch (item.type) {
-        case "letter":
-          if (item.letter === "") {
+        case 'letter':
+          if (item.letter === '') {
             const customLetter = prompt('Enter the desired letter');
 
-            if (customLetter !== null && customLetter.trim() !== "" && customLetter.length === 1) {
-              props.gameOperations.placeLetter({
+            if (customLetter && customLetter.trim() !== '' && customLetter.length === 1) {
+              props.socketOperations.current.placeLetter({
                 targetIndex: props.index,
                 newData: {
                   letter: customLetter.toUpperCase(),
@@ -29,7 +61,7 @@ export default function GridItem(props: GridItemProps): React.ReactElement {
               });
             }
           } else {
-            props.gameOperations.placeLetter({
+            props.socketOperations.current.placeLetter({
               targetIndex: props.index,
               newData: {
                 letter: item.letter,
@@ -38,12 +70,12 @@ export default function GridItem(props: GridItemProps): React.ReactElement {
             });
           }
           break;
-        case "gridLetter":
-          props.gameOperations.removeBoardLetter({
+        case 'gridLetter':
+          props.socketOperations.current.removeBoardLetter({
             index: item.index,
             isBeingMoved: true
           });
-          props.gameOperations.placeLetter({
+          props.socketOperations.current.placeLetter({
             targetIndex: props.index,
             newData: {
               letter: item.letter,
@@ -54,22 +86,23 @@ export default function GridItem(props: GridItemProps): React.ReactElement {
           break;
       }
     },
-    canDrop: _ => {
+    canDrop: () => {
       return props.gridItem.empty;
     },
   });
 
   const [, drag] = useDrag<GridDragItem, unknown, unknown>({
     item: {
-      type: "gridLetter",
+      type: 'gridLetter',
       index: props.index,
-      letter: props.gridItem.empty ? "#" : props.gridItem.letter,
+      letter: props.gridItem.empty ? '#' : props.gridItem.letter,
       value: props.gridItem.empty ? -1 : props.gridItem.value
     },
-    canDrag: _ => {
+    canDrag: () => {
       return !props.gridItem.empty;
     }
   });
+
 
   if (props.gridItem.empty) {
     return (

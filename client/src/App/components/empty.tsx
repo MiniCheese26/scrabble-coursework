@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-export default function Empty() {
+export default function Empty(): JSX.Element {
     return (
         <></>
     );

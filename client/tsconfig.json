@@ -78,6 +78,9 @@
       ],
       "Classes/*": [
         "src/App/classes/*"
+      ],
+      "Hooks/*": [
+        "src/App/hooks/*"
       ]
     },
     /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */

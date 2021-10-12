@@ -1,74 +1,47 @@
-import {PlayerWrapper, SingleplayerCreation, StartGame} from "Styles/game/createLocal/styles";
-import Player from "Components/player";
-import {Break} from "Styles/utils";
-import React, {ChangeEvent, useState} from "react";
-import {CreateLocalProps} from "Types/createLocal";
-import {GamePlayerType, LocalPlayer} from "Types/sharedTypes";
-import {useHistory} from "react-router-dom";
+import Player from 'Components/player';
+import React, {ChangeEvent, useState} from 'react';
+import {GamePlayerType, LocalPlayer} from 'Types/sharedTypes';
+import {useHistory} from 'react-router-dom';
+import {CreateLocalProps} from 'Types/props';
+import { PlayerWrapper } from 'Styles/layout/lobbyCard';
+import { LobbyBox, StartGame } from 'Styles/layout/lobby';
 
 export default function CreateLocal(props: CreateLocalProps): JSX.Element {
     const [players, setPlayers] = useState<LocalPlayer[]>([
         {
-            name: "1",
-            type: "Human",
-            id: "0"
+            name: '1',
+            type: 'Human',
+            id: '0'
         },
         {
-            name: "2",
-            type: "Human",
-            id: "1"
+            name: '2',
+            type: 'Human',
+            id: '1'
         },
         {
-            name: "",
-            type: "Empty",
-            id: "2"
+            name: '',
+            type: 'Empty',
+            id: '2'
         },
         {
-            name: "",
-            type: "Ignore",
-            id: "3"
+            name: '',
+            type: 'Empty',
+            id: '3'
         }
     ]);
 
     const history = useHistory();
 
     const handleSetPlayers = (newType: GamePlayerType, index: number) => {
-        const playersCopy = [...players];
+        const playersClone = [...players];
 
-        if (newType === "Empty") {
-            const f = playersCopy.filter(x => x.type !== "Ignore" && x.type !== "Empty").length - 1;
+        playersClone[index].type = newType;
 
-            if (index < f) {
-                for (let i = index + 1; i < f + 1; i++) {
-                    playersCopy[i - 1] = playersCopy[i];
-                }
-
-                if (index < 3) {
-                    playersCopy[index + 1].type = "Ignore";
-                }
-            } else {
-                playersCopy[index].name = "";
-                playersCopy[index].type = newType;
-
-                if (index < 3) {
-                    playersCopy[index + 1].type = "Ignore";
-                }
-            }
-        } else {
-            playersCopy[index].name = "";
-            playersCopy[index].type = newType;
-
-            if (newType === "Ai") {
-                playersCopy[index].name = `AI${index + 1}`;
-            }
-
-            if (index < 3) {
-                playersCopy[index + 1].type = "Empty";
-            }
-
+        if (playersClone[index].type === 'Empty') {
+            playersClone[index].name = `Player ${index + 1}`;
         }
 
-        setPlayers(playersCopy);
+        setPlayers(playersClone);
     };
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
@@ -78,26 +51,39 @@ export default function CreateLocal(props: CreateLocalProps): JSX.Element {
     };
 
     const onStartGame = () => {
-        props.createLocalGame(players);
-        history.push("/game");
+        if ([...players].every(x => x.type === 'Empty')) {
+            return;
+        }
+
+        const playersClone = [...players];
+
+        for (const player of playersClone) {
+            if (player.type !== 'Empty' && player.name.trim().length === 0) {
+                player.name = `Player ${Number.parseInt(player.id) + 1}`;
+            }
+        }
+
+        setPlayers(playersClone);
+
+        props.socketOperations.current.createLocalGame({localPlayers: players});
+        history.push('/game');
     };
 
     return (
-        <SingleplayerCreation>
-            <PlayerWrapper gridArea={"player1"}>
-                <Player handlePlayers={handleSetPlayers} handleInput={handleInputChange} players={players} index={0}/>
+        <LobbyBox>
+            <PlayerWrapper gridArea={'player1'}>
+                <Player handlePlayers={handleSetPlayers} handleInput={handleInputChange} player={players[0]}/>
             </PlayerWrapper>
-            <PlayerWrapper gridArea={"player2"}>
-                <Player handlePlayers={handleSetPlayers} handleInput={handleInputChange} players={players} index={1}/>
+            <PlayerWrapper gridArea={'player2'}>
+                <Player handlePlayers={handleSetPlayers} handleInput={handleInputChange} player={players[1]}/>
             </PlayerWrapper>
-            <Break/>
-            <PlayerWrapper gridArea={"player3"}>
-                <Player handlePlayers={handleSetPlayers} handleInput={handleInputChange} players={players} index={2}/>
+            <PlayerWrapper gridArea={'player3'}>
+                <Player handlePlayers={handleSetPlayers} handleInput={handleInputChange} player={players[2]}/>
             </PlayerWrapper>
-            <PlayerWrapper gridArea={"player4"}>
-                <Player handlePlayers={handleSetPlayers} handleInput={handleInputChange} players={players} index={3}/>
+            <PlayerWrapper gridArea={'player4'}>
+                <Player handlePlayers={handleSetPlayers} handleInput={handleInputChange} player={players[3]}/>
             </PlayerWrapper>
             <StartGame onClick={onStartGame}>Start Game</StartGame>
-        </SingleplayerCreation>
+        </LobbyBox>
     );
 }

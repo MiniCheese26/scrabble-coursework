@@ -1,16 +1,13 @@
-import PlayerAdd from "./playerAdd";
-import PlayerSelected from "./playerSelected";
-import React from "react";
-import {PlayerSelectedProps} from "Types/playerSelected";
+import AddPlayerOptions from './addPlayerOptions';
+import AddedPlayer from './addedPlayer';
+import React from 'react';
+import {PlayerProps} from 'Types/props';
 
-export default function Player(props: PlayerSelectedProps): JSX.Element {
-    const player = props.players[props.index];
-
-    if (player.type === "Empty") {
-        return <PlayerAdd players={props.players} index={props.index} handlePlayers={props.handlePlayers} handleInput={props.handleInput}/>
-    } else if (player.type === "Ignore") {
-        return <></>;
-    } else {
-        return <PlayerSelected players={props.players} index={props.index} handlePlayers={props.handlePlayers} handleInput={props.handleInput}/>
-    }
+export default function Player(props: PlayerProps): JSX.Element {
+  if (props.player.type === 'Empty') {
+    return <AddPlayerOptions id={props.player.id} handlePlayers={props.handlePlayers}/>;
+  } else {
+    return <AddedPlayer id={props.player.id} handlePlayers={props.handlePlayers} player={props.player}
+                        handleInput={props.handleInput}/>;
+  }
 }

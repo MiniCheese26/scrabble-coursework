@@ -1,9 +1,13 @@
-import {usePreview} from "react-dnd-preview";
-import {LetterText, LetterValue, PreviewLetterBox} from "Styles/components/letter/styles";
-import React from "react";
+// Don't know what's causing this the declare module is valid
+// @ts-ignore
+import {usePreview} from 'react-dnd-preview';
+import React from 'react';
+import {LetterText, LetterValue, PreviewLetterBox } from 'Styles/layout/letter';
+import {LetterDragItem} from 'Types/types';
+import {Style} from 'Types/preview';
 
 export default function Preview(): JSX.Element | null {
-    const {display, item, style} = usePreview();
+    const {display, item, style}: {display: boolean, item: LetterDragItem, style: Style} = usePreview();
 
     if (!display) {
         return null;

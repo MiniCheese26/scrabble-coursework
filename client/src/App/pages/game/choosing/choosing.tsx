@@ -1,11 +1,11 @@
-import React from "react";
-import {GameOption} from "Styles/game/styles";
+import React from 'react';
+import { UiButton } from 'Styles/layout/uiButton';
 
 export default function Choosing(): JSX.Element {
     return (
         <>
-            <GameOption to="/create">Create Game</GameOption>
-            <GameOption to="/join">Join Game</GameOption>
+            <UiButton to='/create'>Create Game</UiButton>
+            <UiButton to='/join'>Join Game</UiButton>
         </>
     );
 }

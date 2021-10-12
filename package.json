@@ -1,54 +1,46 @@
 {
-  "name": "scrabble",
-  "version": "1.0.0",
-  "main": "src/index.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "setup": "npm i && cd client && npm i && echo. && npm run build && cd .. && echo. && tsc",
-    "start": "node build/index.js",
-    "devStart": "nodemon"
-  },
-  "author": "Kaleb Medhurst",
-  "devDependencies": {
-    "@types/bcrypt": "^3.0.0",
-    "@types/compression": "^1.7.0",
-    "@types/connect-pg-simple": "^4.2.2",
-    "@types/express": "^4.17.11",
-    "@types/express-session": "^1.17.3",
-    "@types/module-alias": "^2.0.0",
-    "@types/node": "^14.14.22",
-    "@types/node-fetch": "^2.5.8",
-    "@types/pg-pool": "^2.0.2",
-    "bcrypt": "^5.0.0",
-    "compression": "^1.7.4",
-    "connect-pg-simple": "^6.2.1",
-    "connect-redis": "^5.0.0",
-    "eslint": "^7.20.0",
-    "eslint-config-portsoc": "^0.8.1",
-    "express": "^4.17.1",
-    "express-session": "^1.17.1",
-    "helmet": "^4.4.1",
-    "module-alias": "^2.2.2",
-    "nanoid": "^3.1.20",
-    "node-fetch": "^2.6.1",
-    "nodemon": "^2.0.7",
-    "pg": "^8.5.1",
-    "pkg-dir": "^5.0.0",
-    "redis": "^3.0.2",
-    "socket.io": "^3.1.0",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.1.5"
-  },
-  "_moduleAliases": {
-    "SharedTypes": "sharedTypes"
-  },
-  "dependencies": {
-    "@types/express-unless": "^0.5.1",
-    "@types/websocket": "^1.0.2",
-    "@types/ws": "^7.4.0",
-    "express-unless": "^0.5.0",
-    "typescript-eslint": "^0.0.1-alpha.0",
-    "websocket": "^1.0.33",
-    "ws": "^7.4.4"
-  }
+    "name": "scrabble",
+    "version": "1.0.0",
+    "main": "src/index.ts",
+    "scripts": {
+        "setup": "npm i && cd client && npm i --force && npm run build",
+        "start": "ts-node src/index.ts",
+        "devStart": "nodemon"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.14.0",
+        "@babel/preset-env": "^7.14.1",
+        "@babel/preset-typescript": "^7.13.0",
+        "@types/bcrypt": "^3.0.0",
+        "@types/compression": "^1.7.0",
+        "@types/express": "^4.17.11",
+        "@types/express-session": "^1.17.3",
+        "@types/express-unless": "^0.5.1",
+        "@types/module-alias": "^2.0.0",
+        "@types/node": "^14.14.22",
+        "@types/node-fetch": "^2.5.8",
+        "@types/websocket": "^1.0.2",
+        "@types/ws": "^7.4.0",
+        "babel-loader": "^8.2.2",
+        "bcrypt": "^5.0.0",
+        "compression": "^1.7.4",
+        "express": "^4.17.1",
+        "express-unless": "^0.5.0",
+        "module-alias": "^2.2.2",
+        "nanoid": "^3.1.22",
+        "node-fetch": "^2.6.1",
+        "nodemon": "^2.0.7",
+        "pkg-dir": "^5.0.0",
+        "websocket": "^1.0.33",
+        "ws": "^7.4.4"
+    },
+    "dependencies": {
+        "ts-node": "^9.1.1",
+        "typescript": "^4.1.5"
+    },
+    "_moduleAliases": {
+        "@Types": "src/type",
+        "@Game": "src/game",
+        "@Websocket": "src/game/websocket"
+    }
 }

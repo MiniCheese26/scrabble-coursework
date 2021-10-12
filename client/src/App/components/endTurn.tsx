@@ -1,13 +1,18 @@
-import React from "react";
-import { EndTurnButton } from "Styles/components/endTurn/styles";
-import {GameOperations} from "Types/index";
+import React from 'react';
+import {SocketOperationProps} from 'Types/props';
+import styled from 'styled-components';
+import {GameButtonCss} from 'Styles/globalStyles';
 
-type EndTurnProps = {
-  gameOperations: GameOperations
-}
+const EndTurnButton = styled.button`
+  ${GameButtonCss};
+  margin-top: 0.3rem;
+  flex: 1;
+  width: 100%;
+  max-height: 70px;
+`;
 
-export default function EndTurn(props: EndTurnProps) {
+export default function EndTurn(props: SocketOperationProps) {
   return (
-    <EndTurnButton onClick={props.gameOperations.endTurn}>End Turn</EndTurnButton>
-  )
+    <EndTurnButton onClick={() => props.socketOperations.current.endTurn()}>End Turn</EndTurnButton>
+  );
 }

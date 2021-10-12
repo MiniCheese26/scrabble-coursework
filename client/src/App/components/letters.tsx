@@ -1,23 +1,32 @@
-import React, {useState} from "react";
-import {
-  LettersAreaWrapper,
-  LettersHeader,
-  LetterItemsWrapper,
-  ExchangeLettersButton
-} from "Styles/components/letter/styles";
-import LetterItem from "Components/letterItem";
-import {useDrop} from "react-dnd";
-import {GridDragItem} from "./gridItem";
-import {Letter} from "Types/sharedTypes";
-import {LetterTradeToggleType} from "Types/letterItem";
-import {LettersProps} from "Types/letters";
+import React, {useState} from 'react';
+import LetterItem from 'Components/letterItem';
+import {useDrop} from 'react-dnd';
+import {SocketIdentification, Letter, LetterWithCount} from 'Types/sharedTypes';
+import {useWebsocketEventRef, useWebsocketEventVariedIO} from 'Hooks/useWebsocketEvent';
+import {BothSocketProps} from 'Types/props';
+import {GameData, GridDragItem, LetterTradeToggleType} from 'Types/types';
+import {ExchangeLettersButton, LetterItemsWrapper, LettersAreaWrapper, LettersHeader } from 'Styles/layout/letter';
 
-export default function Letters(props: LettersProps): JSX.Element {
+
+export default function Letters(props: BothSocketProps): JSX.Element {
+  // use ref has to be used here as it's referenced in a closure.
+  // references to the state in closures will become stale
+  const id = useWebsocketEventRef<SocketIdentification>(props.localStateChangeEmitter.current.idUpdated);
+  const playerLetters = useWebsocketEventVariedIO<GameData, LetterWithCount[]>(props.localStateChangeEmitter.current.gameDataUpdated, (data) => {
+    const currentPlayer = data.Players.find(x => x.playerId === id.current?.playerId);
+
+    if (currentPlayer?.isClient) {
+      return currentPlayer.letters;
+    } else {
+      return [];
+    }
+  }, []);
+
   const [selectedLetters, setSelectedLetters] = useState<Letter[]>([]);
   const [isTradingLetters, setIsTradingLetters] = useState(false);
 
   const onLetterTradeToggled = (letter: Letter, type: LetterTradeToggleType) => {
-    if (type === "select") {
+    if (type === 'select') {
       setSelectedLetters(prev => [...prev, letter]);
     } else {
       setSelectedLetters(prev => prev.filter(x => x === letter));
@@ -26,7 +35,7 @@ export default function Letters(props: LettersProps): JSX.Element {
 
   const letters = [];
 
-  for (const letter of props.letters) {
+  for (const letter of playerLetters!) {
     for (let i = 0; i < letter.count; i++) {
 
       // Work on implementing some sort of unique id for the key
@@ -38,9 +47,9 @@ export default function Letters(props: LettersProps): JSX.Element {
   }
 
   const [, drop] = useDrop<GridDragItem, unknown, unknown>({
-    accept: "gridLetter",
+    accept: 'gridLetter',
     drop: (item => {
-      props.gameOperations.removeBoardLetter({
+      props.socketOperations.current.removeBoardLetter({
         index: item.index,
         isBeingMoved: false
       });
@@ -49,12 +58,12 @@ export default function Letters(props: LettersProps): JSX.Element {
 
   const onClickTradingLetters = () => {
     if (isTradingLetters && selectedLetters.length > 0) {
-      props.gameOperations.exchangeLetters({letters: selectedLetters, isExchanging: true});
+      props.socketOperations.current.exchangeLetters({letters: selectedLetters, isExchanging: true});
     }
 
     setSelectedLetters(() => []);
     setIsTradingLetters(prev => !prev);
-  }
+  };
 
   return (
     <LettersAreaWrapper ref={drop}>
@@ -63,7 +72,7 @@ export default function Letters(props: LettersProps): JSX.Element {
         {letters}
       </LetterItemsWrapper>
       <ExchangeLettersButton
-        onClick={() => onClickTradingLetters()}>{isTradingLetters ? "Submit" : "Trade Letters"}</ExchangeLettersButton>
+        onClick={() => onClickTradingLetters()}>{isTradingLetters ? 'Submit' : 'Trade Letters'}</ExchangeLettersButton>
     </LettersAreaWrapper>
   );
 }
